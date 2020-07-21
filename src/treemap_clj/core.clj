@@ -349,7 +349,7 @@
   [& args]
   (println "Hello, World!"))
 
-(defonce history (atom []))
+
 
 (defn read-source
   ([]
@@ -366,4 +366,5 @@
          (if form
            (recur (conj forms form))
            forms))))))
-(def my-source (doall (read-source)))
+
+
