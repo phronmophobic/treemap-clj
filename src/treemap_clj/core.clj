@@ -1,6 +1,7 @@
 (ns treemap-clj.core
   (:require [membrane.ui :as ui
              :refer [on]]
+            [clojure.zip :as z]
             [membrane.skia :as skia]
             [membrane.component :as component
              :refer [defui]])
@@ -8,12 +9,49 @@
 
   (:gen-class))
 
+(comment
+  (require '[clojure.data.json :as json]))
+
+(defn read-source
+  ([]
+   (read-source
+    "src/treemap_clj/core.clj"))
+  ([fname]
+   (let [rdr (java.io.PushbackReader.
+              (clojure.java.io/reader
+               (clojure.java.io/file fname))
+              )
+         ]
+     (loop [forms []]
+       (let [form (read rdr false nil)]
+         (if form
+           (recur (conj forms form))
+           forms))))))
+
+
+(def type-colors
+  {
+   clojure.lang.Symbol [42 40 250]
+   clojure.lang.Keyword [250 151 137]
+   java.lang.String [112 210 250]
+   java.lang.Double [250 221 87 98]
+   java.lang.Long [250 221 87 98]
+   java.lang.Character [112 210 250]
+   java.lang.Boolean [100 250 178]
+
+   })
+
+(defn data-color [obj]
+  (mapv #(/ % 255.0) (get type-colors (type obj) [0 0 0])))
+
+
 (defn treemap-size [obj]
   (if (and (seqable? obj) (not (string? obj)))
     (reduce + (map treemap-size obj))
     (cond
 
       (number? obj)
+      ;; obj
       (count (str obj))
 
       (instance? clojure.lang.Named obj)
@@ -30,8 +68,21 @@
 (defn calc-density [obj {:keys [w h] :as rect} size]
   (/ (size obj) (* w h)))
 
+(defrecord Rect [x y w h obj children])
+(defn make-rect
+  ([w h]
+   (Rect. 0 0 w h nil nil))
+  ([x y w h]
+   (Rect. x y w h nil nil)))
+(defn area [rect]
+  (* (:w rect) (:h rect)))
+(defn translate [rect [sx sy]]
+  (-> rect
+      (update :x + sx)
+      (update :y + sy)))
+
 (def algorithm :squarify)
-(def my-rect [100 100])
+(def my-rect (make-rect 100 100))
 (def my-obj ["12" 3 4 5])
 (def my-density (calc-density my-obj my-rect treemap-size))
 
@@ -139,7 +190,7 @@
 
 
 
-(defn render-strip
+#_(defn render-strip
   ([strip]
    (render-strip [100 100]))
   ([strip [w h :as rect] size]
@@ -202,65 +253,81 @@
 
 ;;     :squarify (not (> w h))))
 
-(defrecord Rect [x y w h obj children])
-(defn make-rect
-  ([w h]
-   (Rect. 0 0 w h nil nil))
-  ([x y w h]
-   (Rect. x y w h nil nil)))
-(defn area [rect]
-  (* (:w rect) (:h rect)))
-(defn translate [rect [sx sy]]
-  (-> rect
-      (update :x + sx)
-      (update :y + sy)))
 
 
 
 
 
-(defn treemap-layout
-  ([nodes]
-   (treemap-layout nodes [100 100]))
-  ([nodes rect]
-   (treemap-layout nodes rect (calc-density nodes rect treemap-size) 0))
-  ([nodes [w h :as rect] size density depth]
-   (loop [strips []
-          strip []
-          rect rect
-          nodes (seq (filter #(pos? (size %)) nodes))
-          ]
-     (if nodes
-       (let [c (first nodes)
-             horizontal? (direction-method depth rect)]
-         (if (add-node-to-strip? strip c rect size density horizontal?)
-           (recur strips
-                  (conj strip c)
-                  rect
-                  (next nodes))
-           (recur (conj strips strip)
-                  [c]
-                  (let [strip-size (reduce + (map size strip))]
-                    (if horizontal?
-                      (let [strip-height (/ strip-size
-                                            (* density w))]
-                        [w (- h strip-height)])
-                      (let [strip-width (/ strip-size
-                                           (* density h))]
-                        [(- w strip-width) h])))
-                  (next nodes))))
-       (if (seq strip)
-         (conj strips strip)
-         strips))))
-  )
 
-(def treemap-options-defaults
-  {:branch? (fn [obj] (and (seqable? obj) (not (string? obj))))
-   :children seq
-   :size treemap-size
-   :layout treemap-layout})
+;; (defn treemap-layout
+;;   ([nodes]
+;;    (treemap-layout nodes [100 100]))
+;;   ([nodes rect]
+;;    (treemap-layout nodes rect (calc-density nodes rect treemap-size) 0))
+;;   ([nodes [w h :as rect] size density depth]
+;;    (loop [strips []
+;;           strip []
+;;           rect rect
+;;           nodes (seq (filter #(pos? (size %)) nodes))
+;;           ]
+;;      (if nodes
+;;        (let [c (first nodes)
+;;              horizontal? (direction-method depth rect)]
+;;          (if (add-node-to-strip? strip c rect size density horizontal?)
+;;            (recur strips
+;;                   (conj strip c)
+;;                   rect
+;;                   (next nodes))
+;;            (recur (conj strips strip)
+;;                   [c]
+;;                   (let [strip-size (reduce + (map size strip))]
+;;                     (if horizontal?
+;;                       (let [strip-height (/ strip-size
+;;                                             (* density w))]
+;;                         [w (- h strip-height)])
+;;                       (let [strip-width (/ strip-size
+;;                                            (* density h))]
+;;                         [(- w strip-width) h])))
+;;                   (next nodes))))
+;;        (if (seq strip)
+;;          (conj strips strip)
+;;          strips))))
+;;   )
 
 
+
+(defn traditional-layout
+  ([objs sizes {:keys [w h] :as rect}]
+   (traditional-layout objs sizes rect nil nil))
+  ([objs sizes {:keys [w h] :as rect} horizontal? total-size]
+   (let [total-size (or total-size (reduce + sizes))
+         density (/ total-size
+                    (* w h))
+         horizontal? (if (nil? horizontal?)
+                       (> w h)
+                       horizontal?)]
+     (if horizontal?
+       (second
+        (reduce (fn [[x-offset childs] [obj size]]
+                  (let [child-w (/ size
+                                   (* density h))
+                        child-rect (assoc (make-rect x-offset 0 child-w h)
+                                          :obj obj)]
+
+                    [(+ x-offset child-w)
+                     (conj childs child-rect)]))
+                [0 []]
+                (map vector objs sizes)))
+       (second
+        (reduce (fn [[y-offset childs] [obj size]]
+                  (let [child-h (/ size
+                                   (* density w))
+                        child-rect (assoc (make-rect 0 y-offset w child-h)
+                                          :obj obj)]
+                    [(+ y-offset child-h)
+                     (conj childs child-rect)]))
+                [0 []]
+                (map vector objs sizes)))))))
 
 (defn strip-rect [total-size {:keys [w h]} density]
   (let [strip-h (/ total-size
@@ -358,38 +425,7 @@
 
 
 
-(defn traditional-layout
-  ([objs sizes {:keys [w h] :as rect}]
-   (traditional-layout objs sizes rect nil nil))
-  ([objs sizes {:keys [w h] :as rect} horizontal? total-size]
-   (let [total-size (or total-size (reduce + sizes))
-         density (/ total-size
-                    (* w h))
-         horizontal? (if (nil? horizontal?)
-                       (> w h)
-                       horizontal?)]
-     (if horizontal?
-       (second
-        (reduce (fn [[x-offset childs] [obj size]]
-                  (let [child-w (/ size
-                                   (* density h))
-                        child-rect (assoc (make-rect x-offset 0 child-w h)
-                                          :obj obj)]
 
-                    [(+ x-offset child-w)
-                     (conj childs child-rect)]))
-                [0 []]
-                (map vector objs sizes)))
-       (second
-        (reduce (fn [[y-offset childs] [obj size]]
-                  (let [child-h (/ size
-                                   (* density w))
-                        child-rect (assoc (make-rect 0 y-offset w child-h)
-                                          :obj obj)]
-                    [(+ y-offset child-h)
-                     (conj childs child-rect)]))
-                [0 []]
-                (map vector objs sizes)))))))
 
 (def treemap-options-defaults
   {:branch? (fn [obj] (and (seqable? obj) (not (string? obj))))
@@ -507,37 +543,6 @@
                    (z/next)))))))
 
 
-(defn read-source
-  ([]
-   (read-source
-    "src/treemap_clj/core.clj"))
-  ([fname]
-   (let [rdr (java.io.PushbackReader.
-              (clojure.java.io/reader
-               (clojure.java.io/file fname))
-              )
-         ]
-     (loop [forms []]
-       (let [form (read rdr false nil)]
-         (if form
-           (recur (conj forms form))
-           forms))))))
-
-
-(def type-colors
-  {
-   clojure.lang.Symbol [42 40 250]
-   clojure.lang.Keyword [250 151 137]
-   java.lang.String [112 210 250]
-   java.lang.Double [250 221 87 98]
-   java.lang.Long [250 221 87 98]
-   java.lang.Character [112 210 250]
-   java.lang.Boolean [100 250 178]
-
-   })
-
-(defn data-color [obj]
-  (mapv #(/ % 255.0) (get type-colors (type obj) [0 0 0])))
 
 
 (defn lets-explore
@@ -546,7 +551,7 @@
   ([obj]
    (let [
          tm (render-treemap
-             (treemap my-source (make-rect 1200 800)
+             (treemap obj (make-rect 1200 800)
                       {:branch? #(and (not (string? %)) (seqable? %))
                        :children seq
                        :size treemap-size

@@ -7,4 +7,5 @@
                  [com.phronemophobic/membrane "0.9.9-beta-SNAPSHOT"]]
   :main ^:skip-aot treemap-clj.core
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}
+             :dev {:dependencies [[org.clojure/data.json "1.0.0"]]}})
