@@ -346,7 +346,7 @@
         strip-rects (traditional-layout strip
                                         strip
                                         (strip-rect strip-size rect horizontal? density)
-                                        true
+                                        horizontal?
                                         (reduce + strip))
         worst-ratio (reduce min 1 (map aspect-ratio strip-rects))
         ;; avg-ratio (/ (reduce + (map aspect-ratio strip-rects))
