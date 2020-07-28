@@ -329,102 +329,95 @@
                 [0 []]
                 (map vector objs sizes)))))))
 
-(defn strip-rect [total-size {:keys [w h]} density]
-  (let [strip-h (/ total-size
-                   (* density w))
-        strip-rect (make-rect w strip-h)]
-    strip-rect))
+(defn strip-rect [total-size {:keys [w h]} horizontal? density]
+  (if horizontal?
+    (let [strip-h (/ total-size
+                     (* density w))
+          strip-rect (make-rect w strip-h)]
+      strip-rect)
+    (let [strip-w (/ total-size
+                     (* density h))
+          strip-rect (make-rect strip-w h)]
+      strip-rect)))
 
-(defn add-to-strip? [size strip {:keys [w h] :as rect} density]
+(defn add-to-strip? [size strip {:keys [w h] :as rect} horizontal? density]
 
   (let [strip-size (reduce + strip)
         strip-rects (traditional-layout strip
                                         strip
-                                        (strip-rect strip-size rect density)
+                                        (strip-rect strip-size rect horizontal? density)
                                         true
                                         (reduce + strip))
         worst-ratio (reduce min 1 (map aspect-ratio strip-rects))
+        ;; avg-ratio (/ (reduce + (map aspect-ratio strip-rects))
+        ;;              (count strip-rects))
 
         new-strip (conj strip size )
         new-rects (traditional-layout new-strip
                                       new-strip
-                                      (strip-rect (+ strip-size size) rect density)
-                                      true
+                                      (strip-rect (+ strip-size size) rect horizontal? density)
+                                      horizontal?
                                       (reduce + new-strip))
         worst-new-ratio (reduce min 1 (map aspect-ratio new-rects))
+        ;; avg-new-ratio (/ (reduce + (map aspect-ratio new-rects))
+        ;;                  (count new-rects))
 
         ]
     (< worst-ratio
-       worst-new-ratio)))
+       worst-new-ratio)
+    #_(< avg-ratio
+       avg-new-ratio)))
 
 
-(defn make-squarified-strip [strip rect density]
+(defn make-squarified-strip [strip rect horizontal? density]
   (let [objs (map first strip)
         sizes (map second strip)
         strip-size (reduce + sizes)]
     (traditional-layout objs
                         sizes
-                        (strip-rect strip-size rect density)
-                        true
+                        (strip-rect strip-size rect horizontal? density)
+                        horizontal?
                         nil)))
 
 (defn squarified-layout
   ([objs sizes rect]
    (squarified-layout objs sizes rect nil))
   ([objs sizes {:keys [w h] :as rect} density]
-
    (let [density (if density
                    density
                    (/ (reduce + sizes)
-                      (* w h)))]
-
+                      (* w h)))
+         horizontal? (> w h)]
      (loop [strip []
             objs-sizes (seq (->> (map vector objs sizes)
                                  (filter (fn [[obj size]]
                                            (pos? size)))))]
        (if-not objs-sizes
-         (make-squarified-strip strip rect density)
+         (make-squarified-strip strip rect horizontal? density)
          (let [[obj size] (first objs-sizes)]
            (if (or (empty? strip)
-                   (add-to-strip? size (map second strip) rect density))
+                   (add-to-strip? size (map second strip) rect horizontal? density))
              (recur (conj strip [obj size])
                     (next objs-sizes))
-             (let [strip-rects (make-squarified-strip strip rect density)
+             (let [strip-rects (make-squarified-strip strip rect horizontal? density)
+                   maxx (reduce max
+                                0
+                                (map #(+ (:x %) (:w %)) strip-rects))
                    maxy (reduce max
                                 0
                                 (map #(+ (:y %) (:h %)) strip-rects))
-                   rest-of-rect (make-rect w (- h maxy))]
+                   ;; items in a strip get layout out horizontally
+                   ;; but strips will be layed out vertically
+                   [ox oy :as offset] (if horizontal?
+                                        [0 maxy]
+                                        [maxx 0])
+                   rest-of-rect (make-rect (- w ox)
+                                           (- h oy))]
                (into strip-rects
                      (map
                       (fn [rect]
-                        (-> rect
-                            (update :y + maxy)))
+                        (translate rect offset))
                       (squarified-layout (map first objs-sizes) (map second objs-sizes) rest-of-rect)))))))))))
-
-(defn worst-aspect-ratio [strip {:keys [w h]} horizontal? total-size]
-  (let [density (/ total-size
-                   (* w h))
-        objs (map first strip)
-        sizes (map second strip)
-        strip-size (reduce + sizes)
-        strip-rect (if horizontal?
-                     (make-rect (/ strip-size
-                                   (* density h))
-                                h)
-                     (make-rect w
-                                (/ strip-size
-                                   (* density w))))
-        rects (traditional-layout objs
-                                  sizes
-                                  strip-rect
-                                  horizontal?
-                                  total-size
-                                  )
-        worst-ratio (reduce min 1 (map aspect-ratio rects))]
-    worst-ratio))
-
-
-
 
 
 (def treemap-options-defaults
