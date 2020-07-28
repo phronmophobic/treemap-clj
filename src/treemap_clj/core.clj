@@ -387,7 +387,7 @@
                    density
                    (/ (reduce + sizes)
                       (* w h)))
-         horizontal? (> w h)]
+         horizontal? (not (> w h))]
      (loop [strip []
             objs-sizes (seq (->> (map vector objs sizes)
                                  (filter (fn [[obj size]]
