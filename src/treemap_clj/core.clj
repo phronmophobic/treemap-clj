@@ -692,9 +692,11 @@
                      {:branch? #(and (not (string? %)) (seqable? %))
                       :children seq
                       :size treemap-size
+                      :padding nil
                       :layout squarified-layout
-                      :min-area (* 15 15)})
-         tm-render [(render-linetree tm)
+                      :min-area  0 #_(* 15 15)})
+         tm-render [(render-treemap tm)
+                    (render-linetree tm)
                     (render-rect-vals tm)
                     ;; (render-bubbles tm)
                     ]]
