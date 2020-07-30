@@ -51,13 +51,16 @@
 
       (number? obj)
       ;; obj
-      (count (str obj))
+      1
+      #_(count (str obj))
 
       (instance? clojure.lang.Named obj)
-      (count (name obj))
+      1
+      #_(count (name obj))
 
       (string? obj)
-      (count obj)
+      1
+      #_(count obj)
 
 
       :else 1
