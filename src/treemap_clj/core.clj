@@ -454,6 +454,196 @@
       (ui/with-style ::ui/style-fill
         view))))
 
+(defn coll-color [obj]
+  (cond
+
+    (map? obj)
+    [0.13333333333333333 0.5450980392156862 0.7098039215686275]
+    (seqable? obj)
+    [0.9019607843137255 0.3568627450980392 0.3058823529411765]
+    ;; (seqable? obj)
+    ;; [0.47843137254901963 0.09019607843137255 0.16862745098039217]
+    :else
+    (do
+      (prn obj)
+      [0 0 0])))
+
+(defn coll-opacity [depth]
+  (min 1 (+ 0.2 (* depth 0.2)))
+  )
+
+(defn linetree-stroke-width [depth]
+  (max 1 (- 10 (* 2 depth))))
+
+(defn render-linetree [rect]
+  (loop [to-visit (seq [[[] 0 0 0 rect]])
+         view []]
+    (if to-visit
+      (let [[ppath depth ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [ox (+ ox (:x rect))
+                oy (+ oy (:y rect))]
+            (recur (into (next to-visit)
+                         (map #(vector (conj ppath rect) (inc depth) ox oy %) children))
+                   (if (zero? depth)
+                     view
+                     (conj view
+                           (ui/with-stroke-width (linetree-stroke-width depth)
+                             (ui/translate
+                              ox oy
+                              (ui/with-color (conj (coll-color (:obj rect))
+                                                   (coll-opacity depth))
+                                (vec
+                                 (for [child children]
+                                   (ui/path [0 0]
+                                            [(:x child)
+                                             (:y child)]))))))))))
+          (recur (next to-visit)
+                 (conj view
+                       (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
+                                     [#_(on
+                                         :on-mouse-down
+                                         (fn [_]
+                                           [[:select (:obj rect) ppath]])
+                                         :mouse-move
+                                         (fn [_]
+                                           [[:hover-rect (:obj rect)]])
+                                         (ui/spacer (:w rect) (:h rect)))
+                                      (ui/filled-rectangle [0 0 0]
+                                                           2 2)])))))
+      (ui/with-style ::ui/style-stroke
+        view))))
+
+(defn bubble-width [depth]
+  (max 1 (- 20 (* 2 depth))))
+
+(defn render-bubbles [rect]
+  (loop [to-visit (seq [[[] 0 0 0 rect]])
+         view []]
+    (if to-visit
+      (let [[ppath depth ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [ox (+ ox (:x rect))
+                oy (+ oy (:y rect))]
+            (recur (into (next to-visit)
+                         (map #(vector (conj ppath rect) (inc depth) ox oy %) children))
+                   
+                   (if (not= 1 depth)
+                     view
+                     (conj view
+                         (let [rect-size (bubble-width depth)]
+                           (ui/translate ox oy
+                                         [(ui/translate (max 0 (- (:w rect)
+                                                                  rect-size)) 0
+                                                        (ui/filled-rectangle [1 1 1 0.5]
+                                                                             rect-size (:h rect)))
+                                          (ui/translate 0 (max 0 (- (:h rect)
+                                                                    rect-size))
+                                                        (ui/filled-rectangle [1 1 1 0.5]
+                                                                             (:w rect) rect-size))]))))))
+          (recur (next to-visit)
+                 view)))
+      (ui/with-style ::ui/style-stroke
+        view))))
+
+(defn pr-label
+  ([x]
+   (pr-label x 30))
+  ([x max-length]
+   (pr-label x max-length nil))
+  ([x max-length font]
+   (let [s (pr-str x)
+         s (if max-length
+             (subs s 0 (min max-length (count s)))
+             s)]
+     (ui/label s (or font ui/default-font)))))
+
+(defn depth-font-size [depth]
+  (max 8
+       (- 20 (* depth 2))))
+
+(defn rect-val-color [depth]
+  (let [gray (min 0.5 (* depth 0.1))]
+    [gray gray gray]))
+
+(defn render-rect-vals [rect]
+  (loop [to-visit (seq [[[] 0 0 0 rect]])
+         view []]
+    (if to-visit
+      (let [[ppath depth ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [ox (+ ox (:x rect))
+                oy (+ oy (:y rect))]
+            (recur (seq
+                    (concat (next to-visit)
+                            (map #(vector (conj ppath rect) (inc depth) ox oy %) children)))
+                   view))
+          (let [lbl (ui/with-color (rect-val-color depth)
+                      (pr-label (:obj rect) 30 (ui/font "Menlo.ttc" (depth-font-size depth))))
+                [w h] (ui/bounds lbl)
+                rx (+ (:x rect) ox)
+                ry (+ (:y rect) oy)
+                overlaps? (some (fn [elem]
+                                  (let [[ex ey] (ui/origin elem)
+                                        [ew eh] (ui/bounds elem)]
+                                    (not (or (< (+ rx w)
+                                                ex)
+                                             (< (+ ex ew)
+                                                rx)
+                                             (< (+ ry h)
+                                                ey)
+                                             (< (+ ey eh)
+                                                ry)))))
+                                view)]
+            (recur (next to-visit)
+                   (if overlaps?
+                     view
+                     (conj view
+                           (ui/translate rx ry
+                                         lbl)
+                           ))))))
+      view)))
+
+
+
+(defn render-treemap-depth [rect]
+  (loop [to-visit (seq [[0 0 0 rect]])
+         view []]
+
+    (if to-visit
+      (let [[depth ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [ox (+ ox (:x rect))
+                oy (+ oy (:y rect))]
+            (recur (into (next to-visit)
+                         (map #(vector (inc depth) ox oy %) children))
+                   (conj view
+                         (ui/with-color (coll-color (:obj rect))
+                           (ui/translate ox oy
+                                         (ui/with-style ::ui/style-stroke
+                                           (ui/with-stroke-width (max 1 (- 10 (* 2 depth)))
+                                             (ui/rectangle (max 1 (dec (:w rect)))
+                                                           (max 1 (dec (:h rect))))
+                                             )))))))
+          (recur (next to-visit)
+                 (conj view
+                       (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
+                                     (let [data (:obj rect)] 
+                                       (on
+                                        :mouse-move
+                                        (fn [_]
+                                          [[:select data]])
+                                        [(ui/with-color (data-color data)
+                                           (ui/rectangle (max 1 (dec (:w rect)))
+                                                         (max 1 (dec (:h rect)))))
+                                         #_(ui/scissor-view [0 0] [(:w rect)
+                                                                   (:h rect)]
+                                                            (ui/label data
+                                                                      (ui/font nil 10)))])))))))
+      (ui/with-style ::ui/style-fill
+        view)))
+  )
+
 
 (defn treemap [obj {:keys [w h] :as rect} {:keys [branch?
                                                   children
@@ -502,18 +692,39 @@
                    (z/next)))))))
 
 
-(defui treemap-explore [& {:keys [tm selected]}]
+(defui on-mouse-out [& {:keys [mouse-out body hover?]}]
+  (if hover?
+    (ui/on-mouse-move-global
+     (fn [[x y]]
+       (let [[w h] (ui/bounds body)]
+         (when (or (neg? x)
+                   (> x w)
+                   (neg? y)
+                   (> y h))
+           [[:set $hover? false]])))
+     body)
+    (ui/on-mouse-move
+     (fn [[x y]]
+       [[:set $hover? true]])
+     body))
+  )
+
+(defui treemap-explore [& {:keys [tm selected hover]}]
   (horizontal-layout
    (on
-    :select
+    :hover-rect
     (fn [data]
+      [[:set $hover data]])
+    :select
+    (fn [data ppath]
       [[:set $selected data]])
-    tm)
+    (ui/padding 10 10
+                tm))
    (when selected
-     (let [s (with-out-str
-               (clojure.pprint/pprint selected))]
-       (ui/label (subs s 0 (min (count s) 500)))))
-   ))
+     (ui/padding 10 5
+                 (let [s (with-out-str
+                           (clojure.pprint/pprint selected))]
+                   (ui/label (subs s 0 (min (count s) 500))))))))
 
 (defn zip-depth [loc]
   (-> loc second :pnodes count))
@@ -544,15 +755,19 @@
   ([]
    (lets-explore (doall (read-source))))
   ([obj]
-   (let [
-         tm (render-treemap
-             (treemap obj (make-rect 1200 800)
-                      {:branch? #(and (not (string? %)) (seqable? %))
-                       :children seq
-                       :size treemap-size
-                       :layout squarified-layout
-                       :min-area 1}))]
-     (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm)})))))
+   (lets-explore obj [1200 800]))
+  ([obj [w h]]
+   (let [tm (treemap obj (make-rect w h)
+                     {:branch? #(and (not (string? %)) (seqable? %))
+                      :children seq
+                      :size treemap-size
+                      :layout squarified-layout
+                      :min-area (* 15 15)})
+         tm-render [(render-linetree tm)
+                    (render-rect-vals tm)
+                    ;; (render-bubbles tm)
+                    ]]
+     (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm-render)})))))
 
 
 
