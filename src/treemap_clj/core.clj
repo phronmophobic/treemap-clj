@@ -562,18 +562,36 @@
                                                   children
                                                   size
                                                   layout
-                                                  min-area] :as options}]
-  (if (and (branch? obj)
-           (> (* w h)
-              (or min-area 0)))
-    (let [childs (children obj)
-          child-rects (layout childs (map size childs) rect)]
-      (assoc rect
-             :children
-             (map (fn [child-rect]
-                    (treemap (:obj child-rect) child-rect options))
-                  child-rects)))
-    rect))
+                                                  min-area
+                                                  padding] :as options}]
+  (let [padding (or padding
+                    (fn [depth]
+                      (max 0
+                           (- 20 (* 4 depth)))))
+
+        depth (get options :depth 0)
+        child-options (assoc options
+                             :depth (inc depth))
+        pad (if (fn? padding)
+              (padding depth)
+              padding)
+
+        include-padding (fn [n]
+                          (max 1 (- n pad)))
+        rect (-> rect
+                 (update :w include-padding)
+                 (update :h include-padding))]
+    (if (and (branch? obj)
+             (> (* w h)
+                (or min-area 0)))
+      (let [childs (children obj)
+            child-rects (layout childs (map size childs) rect)]
+        (assoc rect
+               :children
+               (map (fn [child-rect]
+                      (treemap (:obj child-rect) child-rect child-options))
+                    child-rects)))
+      rect)))
 
 (defn treemap-zip [obj {:keys [w h] :as rect} {:keys [branch?
                                                       children
