@@ -3,14 +3,13 @@
              :refer [on]]
             [clojure.zip :as z]
             [membrane.skia :as skia]
+            [clojure.data.json :as json]
             [membrane.component :as component
              :refer [defui]])
 
 
   (:gen-class))
 
-(comment
-  (require '[clojure.data.json :as json]))
 
 (defn read-source
   ([]
