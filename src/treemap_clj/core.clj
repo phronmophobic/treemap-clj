@@ -191,24 +191,6 @@
     rects))
 
 
-
-#_(defn render-strip
-  ([strip]
-   (render-strip [100 100]))
-  ([strip [w h :as rect] size]
-   (let [total-size (reduce + (map size strip))
-         density (/ total-size (* w h))]
-     (render-strip strip rect density true)))
-  ([strip rect size density horizontal?]
-   (ui/with-style
-     ::ui/style-stroke
-     (apply (if horizontal?
-              horizontal-layout
-              vertical-layout)
-            (map (fn [[w h]] (ui/rectangle w h)) (subdivide strip rect size density horizontal?))))))
-
-
-
 (comment
   (skia/run (let [rect [100 100]
                   [w h] rect
@@ -225,77 +207,6 @@
 
 (defn worst [strip rect density horizontal?]
   (reduce min 1 (map aspect-ratio (subdivide-strip (map second strip) rect density horizontal?))))
-
-
-
-;; (defn avg [strip rect size density horizontal?]
-;;   (let [total  (reduce + (map aspect-ratio (subdivide-strip (map size strip) rect density horizontal?)))]
-;;     (/ total (count strip))))
-
-
-
-
-;; (defn add-node-to-strip? [strip node rect size density horizontal?]
-;;   (case algorithm
-;;     :traditional true
-;;     :squarify (or (empty? strip)
-;;                   (< (worst strip rect size density horizontal?)
-;;                      (worst (conj strip node)
-;;                             rect size density horizontal?)))
-;;     :strip (or (empty? strip)
-;;                (< (avg strip rect size density horizontal?)
-;;                   (avg (conj strip node)
-;;                        rect  size density horizontal?))))
-;;   )
-
-;; (defn direction-method [depth [w h]]
-;;   (case algorithm
-;;     (:traditional :strip)
-;;     (even? depth)
-
-;;     :squarify (not (> w h))))
-
-
-
-
-
-
-
-;; (defn treemap-layout
-;;   ([nodes]
-;;    (treemap-layout nodes [100 100]))
-;;   ([nodes rect]
-;;    (treemap-layout nodes rect (calc-density nodes rect treemap-size) 0))
-;;   ([nodes [w h :as rect] size density depth]
-;;    (loop [strips []
-;;           strip []
-;;           rect rect
-;;           nodes (seq (filter #(pos? (size %)) nodes))
-;;           ]
-;;      (if nodes
-;;        (let [c (first nodes)
-;;              horizontal? (direction-method depth rect)]
-;;          (if (add-node-to-strip? strip c rect size density horizontal?)
-;;            (recur strips
-;;                   (conj strip c)
-;;                   rect
-;;                   (next nodes))
-;;            (recur (conj strips strip)
-;;                   [c]
-;;                   (let [strip-size (reduce + (map size strip))]
-;;                     (if horizontal?
-;;                       (let [strip-height (/ strip-size
-;;                                             (* density w))]
-;;                         [w (- h strip-height)])
-;;                       (let [strip-width (/ strip-size
-;;                                            (* density h))]
-;;                         [(- w strip-width) h])))
-;;                   (next nodes))))
-;;        (if (seq strip)
-;;          (conj strips strip)
-;;          strips))))
-;;   )
-
 
 
 (defn traditional-layout
