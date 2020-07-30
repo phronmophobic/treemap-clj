@@ -425,7 +425,7 @@
                                       (ui/filled-rectangle [0 0 0]
                                                            2 2)])))))
       (ui/with-style ::ui/style-stroke
-        view))))
+        (vec (reverse view))))))
 
 (defn bubble-width [depth]
   (max 1 (- 20 (* 2 depth))))
