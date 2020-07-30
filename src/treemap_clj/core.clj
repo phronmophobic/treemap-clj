@@ -357,8 +357,8 @@
                                        (on
                                         :mouse-move
                                         (fn [_]
-                                          [[:select data]])
-                                        (ui/with-color (data-color data)
+                                          [[:select data nil]])
+                                        (ui/with-color (conj (data-color data) 0.2)
                                           (ui/rectangle (max 1 (dec (:w rect)))
                                                         (max 1 (dec (:h rect))))
                                           ))))))))
