@@ -2,46 +2,47 @@
   (:require [membrane.ui :as ui
              :refer [on]]
             [clojure.zip :as z]
-            [membrane.skia :as skia]
-            [clojure.data.json :as json]
+            clojure.pprint
+            #?(:clj [membrane.skia :as skia])
+            #?(:cljs [membrane.webgl :as webgl])
+            #?(:clj [clojure.data.json :as json])
             [membrane.component :as component
              :refer [defui]])
 
 
-  (:gen-class))
+  #?(:clj (:gen-class)))
 
 
-(defn read-source
-  ([]
-   (read-source
-    "src/treemap_clj/core.clj"))
-  ([fname]
-   (let [rdr (java.io.PushbackReader.
-              (clojure.java.io/reader
-               (clojure.java.io/file fname))
-              )
-         ]
-     (loop [forms []]
-       (let [form (read rdr false nil)]
-         (if form
-           (recur (conj forms form))
-           forms))))))
+#?(:clj
+   (defn read-source
+     ([]
+      (read-source
+       "src/treemap_clj/core.clj"))
+     ([fname]
+      (let [rdr (java.io.PushbackReader.
+                 (clojure.java.io/reader
+                  (clojure.java.io/file fname))
+                 )
+            ]
+        (loop [forms []]
+          (let [form (read rdr false nil)]
+            (if form
+              (recur (conj forms form))
+              forms)))))))
 
 
-(def type-colors
-  {
-   clojure.lang.Symbol [42 40 250]
-   clojure.lang.Keyword [250 151 137]
-   java.lang.String [112 210 250]
-   java.lang.Double [250 221 87 98]
-   java.lang.Long [250 221 87 98]
-   java.lang.Character [112 210 250]
-   java.lang.Boolean [100 250 178]
-
-   })
+(defn type-color [obj]
+  (cond
+   (symbol? obj) [42 40 250]
+   (keyword? obj) [250 151 137]
+   (string? obj) [112 210 250]
+   (number? obj)  [250 221 87 98]
+   (char? obj) [112 210 250]
+   (boolean? obj) [100 250 178]
+   :else [0 0 0]))
 
 (defn data-color [obj]
-  (mapv #(/ % 255.0) (get type-colors (type obj) [0 0 0])))
+  (mapv #(/ % 255.0) (type-color obj)))
 
 
 (defn treemap-size [obj]
@@ -641,21 +642,68 @@
   )
 
 (defui treemap-explore [& {:keys [tm selected hover]}]
-  (horizontal-layout
-   (on
-    :hover-rect
-    (fn [data]
-      [[:set $hover data]])
-    :select
-    (fn [data ppath]
-      [[:set $selected data]])
-    (ui/padding 10 10
-                tm))
-   (when selected
-     (ui/padding 10 5
-                 (let [s (with-out-str
-                           (clojure.pprint/pprint selected))]
-                   (ui/label (subs s 0 (min (count s) 500))))))))
+  (vertical-layout
+   (ui/button "redo"
+              (fn []
+                (prn "redoing" tm)
+                nil))
+   (horizontal-layout
+    (on
+     :hover-rect
+     (fn [data]
+       [[:set $hover data]])
+     :select
+     (fn [data ppath]
+       [[:set $selected data]])
+     (ui/padding 10 10
+                 tm))
+    (when selected
+      (ui/padding 10 5
+                  (let [s (with-out-str
+                            (clojure.pprint/pprint selected))]
+                    (ui/label (subs s 0 (min (count s) 500)))))))))
+
+(comment
+  (require '[membrane.example.todo :as td])
+
+  (def todo-state (atom {:todos
+                         [{:complete? false
+                           :description "first"}
+                          {:complete? false
+                           :description "second"}
+                          {:complete? true
+                           :description "third"}]
+                         :next-todo-text ""}))
+  (skia/run (component/make-app #'td/todo-app
+                                todo-state))
+
+  (def explore-state (atom {:tm nil
+                            :selected nil}))
+
+  (add-watch todo-state :explore
+             (fn [k ref old new]
+               (future
+                 (let [tm (treemap (dissoc new
+                                           ::component/extra
+                                           ::component/context) (make-rect 400 400)
+                                   {:branch? #(and (not (string? %)) (seqable? %))
+                                    :children seq
+                                    :size treemap-size
+                                    :layout squarified-layout
+                                    :min-area 1})
+
+                       #_ #_ rendered (render-treemap-depth tm)
+                       rendered
+                       [(render-linetree tm)
+                        (render-rect-vals tm)
+                        ;; (render-bubbles tm)
+                        ]]
+                   (swap! explore-state
+                          update :tm (constantly rendered))))))
+
+  (skia/run (component/make-app #'treemap-explore explore-state)))
+
+
 
 (defn zip-depth [loc]
   (-> loc second :pnodes count))
@@ -681,28 +729,63 @@
 
 
 
+#?
+(:clj
+ (defn lets-explore
+   ([]
+    (lets-explore (doall (read-source))))
+   ([obj]
+    (lets-explore obj [1200 800]))
+   ([obj [w h]]
+    (let [tm (treemap obj (make-rect w h)
+                      {:branch? #(and (not (string? %)) (seqable? %))
+                       :children seq
+                       :size treemap-size
+                       :padding nil
+                       :layout squarified-layout
+                       :min-area  0 #_(* 15 15)})
+          tm-render [(render-treemap tm)
+                     (render-linetree tm)
+                     ;; (render-rect-vals tm)
+                     ;; (render-bubbles tm)
+                     ]]
+      (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm-render)}))
+      ))))
 
-(defn lets-explore
-  ([]
-   (lets-explore (doall (read-source))))
-  ([obj]
-   (lets-explore obj [1200 800]))
-  ([obj [w h]]
-   (let [tm (treemap obj (make-rect w h)
-                     {:branch? #(and (not (string? %)) (seqable? %))
-                      :children seq
-                      :size treemap-size
-                      :padding nil
-                      :layout squarified-layout
-                      :min-area  0 #_(* 15 15)})
-         tm-render [(render-treemap tm)
-                    (render-linetree tm)
-                    (render-rect-vals tm)
-                    ;; (render-bubbles tm)
-                    ]]
-     (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm-render)})))))
 
+#?
+(:cljs
+ (do
+   (defn $ [id]
+     (js/document.getElementById id))
+   (def canvas ($ "canvas"))
+   (def blob-area ($ "blobarea"))
+   (def update-btn ($ "update-btn"))
+   (defonce app-state (atom {}))
+   (defonce button-listen (.addEventListener
+                           update-btn
+                           "click"
+                           (fn []
+                             (let [blob (.-value blob-area)
+                                   obj (js->clj (js/JSON.parse blob))
+                                   _ (prn obj)
+                                   tm (treemap obj (make-rect (.-width canvas)
+                                                              (.-height canvas))
+                                               {:branch? #(and (not (string? %)) (seqable? %))
+                                                :children seq
+                                                :size treemap-size
+                                                :padding nil
+                                                :layout squarified-layout
+                                                :min-area  0 #_(* 15 15)})
+                                   tm-render [(render-treemap tm)
+                                              (render-linetree tm)
+                                              (render-rect-vals tm)
+                                              ;; (render-bubbles tm)
+                                              ]]
+                               (swap! app-state
+                                      assoc :tm tm-render)))))
 
+   (defonce start-app (membrane.webgl/run (component/make-app #'treemap-explore app-state) {:canvas canvas}))))
 
 (defn -main
   "I don't do a whole lot ... yet."
