@@ -1,0 +1,28 @@
+{
+  "name": "treemap-clj",
+  "version": "1.0.0",
+  "description": "FIXME: description",
+  "main": "index.js",
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  },
+  "dependencies": {
+    "rtree": "^1.4.2"
+    "shadow-cljs": "^2.10.19"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phronmophobic/treemap-clj.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/phronmophobic/treemap-clj/issues"
+  },
+  "homepage": "https://github.com/phronmophobic/treemap-clj#readme"
+}
