@@ -20,6 +20,7 @@
                            ;; :optimizations :advanced
                            :externs ["resources/public/js/opentype.externs.js"]
                            }}]}
+  ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[org.clojure/data.json "1.0.0"]]}})
