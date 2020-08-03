@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.764"]
                  [com.phronemophobic/membrane "0.9.9-beta-SNAPSHOT"]
+                 [com.github.davidmoten/rtree "0.8.7"]]
   :main ^:skip-aot treemap-clj.core
   :plugins [[lein-cljsbuild "1.1.7"]]
   :cljsbuild {:builds

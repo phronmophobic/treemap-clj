@@ -2,6 +2,7 @@
   (:require [membrane.ui :as ui
              :refer [on]]
             [clojure.zip :as z]
+            [treemap-clj.rtree :as rtree]
             clojure.pprint
             #?(:clj [membrane.skia :as skia])
             #?(:cljs [membrane.webgl :as webgl])
