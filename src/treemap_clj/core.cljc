@@ -18,15 +18,15 @@
    (defn read-source
      ([]
       (read-source
-       "src/treemap_clj/core.clj"))
+       "src/treemap_clj/core.cljc"))
      ([fname]
-      (let [rdr (java.io.PushbackReader.
-                 (clojure.java.io/reader
-                  (clojure.java.io/file fname))
-                 )
-            ]
+      (with-open [rdr (java.io.PushbackReader.
+                       (clojure.java.io/reader
+                        (clojure.java.io/file fname)))]
         (loop [forms []]
-          (let [form (read rdr false nil)]
+          (let [form (read {:read-cond :allow
+                            :eof nil}
+                           rdr)]
             (if form
               (recur (conj forms form))
               forms)))))))
