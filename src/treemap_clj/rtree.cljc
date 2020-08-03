@@ -3,6 +3,7 @@
      (:require [rtree]))
 
   #?(:clj (:import com.github.davidmoten.rtree.RTree
+                   com.github.davidmoten.rtree.Entries
                    com.github.davidmoten.rtree.geometry.Geometries
                    ))
   )
@@ -10,16 +11,27 @@
 #?
 (:clj
  (defn jtree [rects]
-   (reduce (fn [rt {:keys [x y w h] :as rect}]
-             ;; tree = tree.add(item, Geometries.point(10,20));
-             (let [geom (Geometries/rectangle
-                         (double x)
-                         (double y)
-                         (double (+ x w))
-                         (double (+ y h)))]
-               (.add ^RTree rt rect geom)))
-           (RTree/create)
-           rects)))
+   (RTree/create (map (fn [{:keys [x y w h] :as rect}]
+                         (let [geom (Geometries/rectangle
+                                    (double x)
+                                    (double y)
+                                    (double (+ x w))
+                                    (double (+ y h)))]
+                           (Entries/entry rect geom)))
+                      rects))
+   #_(reduce (fn [rt {:keys [x y w h] :as rect}]
+               ;; tree = tree.add(item, Geometries.point(10,20));
+               (let [geom (Geometries/rectangle
+                           (double x)
+                           (double y)
+                           (double (+ x w))
+                           (double (+ y h)))]
+                 (.add ^RTree rt rect geom)))
+             (-> (RTree/star)
+                 (.maxChildren 4)
+                 (.create)
+                 )
+             rects)))
 #?
 (:clj
  (defn jsearch [rt [x y]]
