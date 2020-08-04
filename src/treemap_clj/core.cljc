@@ -560,40 +560,74 @@
   )
 
 
-(defn treemap [obj {:keys [w h] :as rect} {:keys [branch?
-                                                  children
-                                                  size
-                                                  layout
-                                                  min-area
-                                                  padding] :as options}]
-  (let [padding (or padding
-                    (fn [depth]
-                      (max 0
-                           (- 20 (* 4 depth)))))
+(defn default-keypath-fn [obj]
+  (cond
+    (map-entry? obj)
+    '[key val]
 
-        depth (get options :depth 0)
-        child-options (assoc options
-                             :depth (inc depth))
-        pad (if (fn? padding)
-              (padding depth)
-              padding)
+    (map? obj)
+    (map #(list 'find %) (keys obj))
 
-        include-padding (fn [n]
-                          (max 1 (- n pad)))
-        rect (-> rect
-                 (update :w include-padding)
-                 (update :h include-padding))]
-    (if (and (branch? obj)
-             (> (* w h)
-                (or min-area 0)))
-      (let [childs (children obj)
-            child-rects (layout childs (map size childs) rect)]
-        (assoc rect
-               :children
-               (map (fn [child-rect]
-                      (treemap (:obj child-rect) child-rect child-options))
-                    child-rects)))
-      rect)))
+    :else
+    (do
+      (assert (seqable? obj))
+      (map #(list 'nth %) (range (count obj))))))
+
+(defn treemap
+  ([obj rect]
+   (treemap obj rect
+            {:branch? #(and (not (string? %)) (seqable? %))
+             :children seq
+             :size treemap-size
+             :padding nil
+             :layout squarified-layout
+             :keypath-fn default-keypath-fn
+             :min-area  1}))
+  ([obj {:keys [w h] :as rect} {:keys [branch?
+                                       children
+                                       size
+                                       layout
+                                       min-area
+                                       padding
+                                       keypath-fn] :as options}]
+   (let [padding (or padding
+                     (fn [depth]
+                       (max 0
+                            (- 20 (* 4 depth)))))
+
+         depth (get options :depth 0)
+         child-options (assoc options
+                              :depth (inc depth))
+         pad (if (fn? padding)
+               (padding depth)
+               padding)
+
+         include-padding (fn [n]
+                           (max 1 (- n pad)))
+         rect (-> rect
+                  (assoc :obj obj)
+                  (update :w include-padding)
+                  (update :h include-padding)
+                  )]
+     (if (and (branch? obj)
+              (> (* w h)
+                 (or min-area 0)))
+       (let [childs (children obj)
+             child-rects (layout childs (map size childs) rect)
+             keypaths (if keypath-fn
+                         (keypath-fn obj)
+                         (repeat nil))]
+         (assoc rect
+                :children
+                (map (fn [keypath child-rect]
+                       (let [child-rect
+                             (with-meta child-rect
+                               {::treemap-parent rect
+                                ::treemap-keypath keypath})]
+                         (treemap (:obj child-rect) child-rect child-options)))
+                     keypaths
+                     child-rects)))
+       rect))))
 
 (defn treemap-zip [obj {:keys [w h] :as rect} {:keys [branch?
                                                       children
@@ -628,41 +662,121 @@
 (defui on-mouse-out [& {:keys [mouse-out body hover?]}]
   (if hover?
     (ui/on-mouse-move-global
-     (fn [[x y]]
-       (let [[w h] (ui/bounds body)]
-         (when (or (neg? x)
-                   (> x w)
-                   (neg? y)
-                   (> y h))
-           [[:set $hover? false]])))
-     body)
-    (ui/on-mouse-move
-     (fn [[x y]]
-       [[:set $hover? true]])
+       (fn [[x y]]
+         (let [[w h] (ui/bounds body)]
+           (when (or (neg? x)
+                     (> x w)
+                     (neg? y)
+                     (> y h))
+             (into
+              [[:set $hover? false]]
+              (mouse-out)))))
+       body)
+    (ui/wrap-on
+     :mouse-move
+     (fn [handler [x y :as pos]]
+       (into [[:set $hover? true]]
+             (handler pos)))
      body))
   )
 
-(defui treemap-explore [& {:keys [tm selected hover]}]
-  (vertical-layout
-   (ui/button "redo"
-              (fn []
-                (prn "redoing" tm)
-                nil))
-   (horizontal-layout
-    (on
-     :hover-rect
-     (fn [data]
-       [[:set $hover data]])
-     :select
-     (fn [data ppath]
-       [[:set $selected data]])
-     (ui/padding 10 10
-                 tm))
-    (when selected
-      (ui/padding 10 5
-                  (let [s (with-out-str
-                            (clojure.pprint/pprint selected))]
-                    (ui/label (subs s 0 (min (count s) 500)))))))))
+
+(def pprint-memo (memoize #(let [s (with-out-str (clojure.pprint/pprint %))]
+                             (subs s 0 (min (count s) 500)))))
+
+(defn parent-lines [rect]
+  (loop [rect rect
+         lines []]
+    (if rect
+      (let [{:keys [x y w h]} rect
+            parent (::treemap-parent (meta rect))
+            px (or (:x parent) 0)
+            py (or (:y parent) 0)
+            local-x (- x px)
+            local-y (- y py)]
+        (recur parent
+               [(ui/path [0 0]
+                         [x y])
+                (ui/translate x y
+                              lines)]))
+      (ui/with-color [1 0 0]
+        (ui/with-stroke-width 5
+          (ui/with-style ::ui/style-stroke
+            lines))))))
+
+(def parent-lines-memo (memoize parent-lines))
+
+
+(defn treemap-keypath [rect]
+  (loop [path ()
+         rect rect]
+    (if-let [m (meta rect)]
+      (if-let [p (::treemap-keypath m)]
+        (recur (conj path p)
+               (::treemap-parent m))
+        path)
+      path)))
+
+(defn treemap-keypath-str [rect]
+  (let [keypath (treemap-keypath rect)
+        ]
+   (clojure.string/join "\n"
+                        (->> keypath
+                             (remove #{'key 'val})
+                             (map (fn [p]
+                                    (if (and (seq p)
+                                             (#{'find 'nth} (first p)))
+                                      (second p)
+                                      p)))))))
+
+(def treemap-keypath-str-memo treemap-keypath-str)
+
+
+(defui treemap-explore [& {:keys [tm select-rect hover-rect]}]
+  (let [{:keys [rect plines keypath obj]} (or hover-rect
+                                              select-rect)]
+    (vertical-layout
+     (ui/button "redo"
+                (fn []
+                  nil))
+     (ui/padding
+      10 10
+      (horizontal-layout
+       (on
+        ::treemap-hover
+        (fn [rect]
+          [[:set $hover-rect
+            {:plines (parent-lines-memo rect)
+             :keypath (treemap-keypath-str-memo rect)
+             :obj (:obj rect)
+             :rect rect}]])
+        ::treemap-click
+        (fn [rect]
+          [[:set $select-rect
+            {:plines (parent-lines-memo rect)
+             :keypath (treemap-keypath-str-memo rect)
+             :obj (:obj rect)
+             :rect rect}]])
+        [(on-mouse-out
+           ;; :hover? (get extra :treemap-hover?)
+           :mouse-out (fn []
+                        [[:set $hover-rect nil]])
+           :body tm)
+         plines]
+        )
+       (when obj
+         (ui/padding 10 5
+                     (let [s (pprint-memo obj)]
+                       (vertical-layout
+                        (ui/label keypath)
+                        (ui/label s ))))))))))
+
+(defn treezip [tm]
+  (z/zipper :children :children
+                      (fn [node children]
+                        (assoc node
+                               :children children))
+                      tm))
 
 (comment
   (require '[membrane.example.todo :as td])
@@ -730,6 +844,54 @@
 
 
 
+(defn treemap-rtree [tm]
+  (loop [to-visit (seq [[0 0 tm]])
+         rects []]
+    (if to-visit
+      (let [[ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [child-ox (+ ox (:x rect))
+                child-oy (+ oy (:y rect))]
+            (recur (into (next to-visit)
+                         (map #(vector child-ox child-oy %) children))
+                   (conj rects
+                         (assoc (translate rect [ox oy])
+                                :obj rect))))
+          (recur (next to-visit)
+                 (conj rects
+                       (assoc (translate rect [ox oy])
+                              :obj rect)))))
+      (rtree/rtree rects))))
+
+
+(defn tree-depth [tm]
+  (loop [tm tm
+         depth 0]
+    (if tm
+      (recur (::treemap-parent (meta tm))
+             (inc depth))
+      depth)))
+
+(defn wrap-treemap-events [tm body]
+  (let [rt (treemap-rtree tm)]
+    (on
+     :mouse-move
+     (fn [pos]
+       (when-let [rect (->>  (rtree/search rt pos)
+                             (sort-by tree-depth)
+                             last
+                             :obj)]
+         [[::treemap-hover rect]]))
+
+     :mouse-down
+     (fn [pos]
+       (when-let [rect (->>  (rtree/search rt pos)
+                             (sort-by tree-depth)
+                             last
+                             :obj)]
+         [[::treemap-click rect]]))
+     body)))
+
 #?
 (:clj
  (defn lets-explore
@@ -741,15 +903,19 @@
     (let [tm (treemap obj (make-rect w h)
                       {:branch? #(and (not (string? %)) (seqable? %))
                        :children seq
+                       :keypath-fn default-keypath-fn
                        :size treemap-size
                        :padding nil
                        :layout squarified-layout
-                       :min-area  0 #_(* 15 15)})
-          tm-render [(render-treemap tm)
-                     (render-linetree tm)
-                     ;; (render-rect-vals tm)
-                     ;; (render-bubbles tm)
-                     ]]
+                       :min-area  1})
+          tm-render (wrap-treemap-events
+                     tm
+                     [(render-treemap tm)
+                      (render-linetree tm)
+                      (render-rect-vals tm)
+                      ;; (render-bubbles tm)
+                      ])
+          ]
       (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm-render)}))
       ))))
 
@@ -760,33 +926,37 @@
    (defn $ [id]
      (js/document.getElementById id))
    (def canvas ($ "canvas"))
-   (def blob-area ($ "blobarea"))
-   (def update-btn ($ "update-btn"))
-   (defonce app-state (atom {}))
-   (defonce button-listen (.addEventListener
-                           update-btn
-                           "click"
-                           (fn []
-                             (let [blob (.-value blob-area)
-                                   obj (js->clj (js/JSON.parse blob))
-                                   _ (prn obj)
-                                   tm (treemap obj (make-rect (.-width canvas)
-                                                              (.-height canvas))
-                                               {:branch? #(and (not (string? %)) (seqable? %))
-                                                :children seq
-                                                :size treemap-size
-                                                :padding nil
-                                                :layout squarified-layout
-                                                :min-area  0 #_(* 15 15)})
-                                   tm-render [(render-treemap tm)
-                                              (render-linetree tm)
-                                              (render-rect-vals tm)
-                                              ;; (render-bubbles tm)
-                                              ]]
-                               (swap! app-state
-                                      assoc :tm tm-render)))))
+     (def blob-area ($ "blobarea"))
+     (def update-btn ($ "update-btn"))
+     (defonce app-state (atom {}))
 
-   (defonce start-app (membrane.webgl/run (component/make-app #'treemap-explore app-state) {:canvas canvas}))))
+     (defn js-main [& args]
+       (defonce button-listen (.addEventListener
+                               update-btn
+                               "click"
+                               (fn []
+                                 (let [blob (.-value blob-area)
+                                       obj (js->clj (js/JSON.parse blob))
+                                       ;; _ (prn obj)
+                                       tm (treemap obj (make-rect 800
+                                                                  800)
+                                                   {:branch? #(and (not (string? %)) (seqable? %))
+                                                    :children seq
+                                                    :keypath-fn default-keypath-fn
+                                                    :size treemap-size
+                                                    :padding nil
+                                                    :layout squarified-layout
+                                                    :min-area  0 #_(* 15 15)})
+                                       tm-render (wrap-treemap-events
+                                                  tm
+                                                  [(render-treemap tm)
+                                                   (render-linetree tm)
+                                                   (render-rect-vals tm)
+                                                   ;; (render-bubbles tm)
+                                                   ])]
+                                   (swap! app-state
+                                          assoc :tm (webgl/->Cached tm-render))))))
+       (defonce start-app (membrane.webgl/run (component/make-app #'treemap-explore app-state) {:canvas canvas})))))
 
 (defn -main
   "I don't do a whole lot ... yet."
