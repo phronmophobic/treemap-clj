@@ -81,6 +81,11 @@
       (update :x + sx)
       (update :y + sy)))
 
+(defn scale [rect [sx sy]]
+  (-> rect
+      (update :w * sx)
+      (update :h * sy)))
+
 (def algorithm :squarify)
 (def my-rect (make-rect 100 100))
 (def my-obj ["12" 3 4 5])
