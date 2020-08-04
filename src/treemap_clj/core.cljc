@@ -477,6 +477,10 @@
   (let [gray (min 0.5 (* depth 0.1))]
     [gray gray gray]))
 
+(def mono-font
+  #?(:clj "Menlo.ttc"
+     :cljs nil))
+
 (defn render-rect-vals [rect]
   (loop [to-visit (seq [[[] 0 0 0 rect]])
          view []]
@@ -490,7 +494,7 @@
                             (map #(vector (conj ppath rect) (inc depth) ox oy %) children)))
                    view))
           (let [lbl (ui/with-color (rect-val-color depth)
-                      (pr-label (:obj rect) 30 (ui/font "Menlo.ttc" (depth-font-size depth))))
+                      (pr-label (:obj rect) 30 (ui/font mono-font (depth-font-size depth))))
                 [w h] (ui/bounds lbl)
                 rx (+ (:x rect) ox)
                 ry (+ (:y rect) oy)
