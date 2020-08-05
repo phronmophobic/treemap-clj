@@ -7,6 +7,7 @@
             #?(:clj [membrane.skia :as skia])
             #?(:cljs [membrane.webgl :as webgl])
             #?(:clj [clojure.data.json :as json])
+            #?(:cljs [goog.net.XhrIo :as xhr])
             [membrane.component :as component
              :refer [defui
                      defeffect]])
@@ -1070,6 +1071,9 @@
    (def canvas ($ "canvas"))
      (def blob-area ($ "blobarea"))
      (def update-btn ($ "update-btn"))
+     (def url-input ($ "url-input"))
+     (def fetch-btn ($ "fetch-btn"))
+
      (defonce app-state (atom {}))
 
      (defn js-main [& args]
@@ -1098,6 +1102,36 @@
                                                    ])]
                                    (swap! app-state
                                           assoc :tm (webgl/->Cached tm-render))))))
+       (defonce fetch-listen (.addEventListener
+                              fetch-btn
+                              "click"
+                              (fn []
+                                (let [url (.-value url-input)]
+                                  (xhr/send url
+                                            (fn [e]
+                                              (let [x (.-target e)
+                                                    obj (js->clj (.getResponseJson x))
+                                                    tm (treemap obj (make-rect 800
+                                                                               800)
+                                                                {:branch? #(and (not (string? %)) (seqable? %))
+                                                                 :children seq
+                                                                 :keypath-fn default-keypath-fn
+                                                                 :size treemap-size
+                                                                 :padding nil
+                                                                 :layout squarified-layout
+                                                                 :min-area  0 #_(* 15 15)})
+                                                    tm-render (wrap-treemap-events
+                                                               tm
+                                                               [(render-treemap tm)
+                                                                (render-linetree tm)
+                                                                (render-rect-vals tm)
+                                                                ;; (render-bubbles tm)
+                                                                ])]
+                                                (swap! app-state
+                                                       assoc :tm (webgl/->Cached tm-render))))))
+
+
+                                )))
        (defonce start-app (membrane.webgl/run (component/make-app #'treemap-explore app-state) {:canvas canvas})))))
 
 (defn -main
