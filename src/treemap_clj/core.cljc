@@ -86,6 +86,15 @@
       (update :w * sx)
       (update :h * sy)))
 
+(defn rect-parent [rect]
+  (some-> rect
+          meta
+          ::treemap-parent
+          deref))
+(defn rect-keypath [rect]
+  (::treemap-keypath (meta rect)))
+
+
 (def algorithm :squarify)
 (def my-rect (make-rect 100 100))
 (def my-obj ["12" 3 4 5])
@@ -620,17 +629,21 @@
              child-rects (layout childs (map size childs) rect)
              keypaths (if keypath-fn
                          (keypath-fn obj)
-                         (repeat nil))]
-         (assoc rect
-                :children
-                (map (fn [keypath child-rect]
-                       (let [child-rect
-                             (with-meta child-rect
-                               {::treemap-parent rect
-                                ::treemap-keypath keypath})]
-                         (treemap (:obj child-rect) child-rect child-options)))
-                     keypaths
-                     child-rects)))
+                         (repeat nil))
+             ;; we would use a promise, but `promise` doesn't exist in cljs
+             parent-ref (atom nil)
+             rect (assoc rect
+                         :children
+                         (map (fn [keypath child-rect]
+                                (let [child-rect
+                                      (with-meta child-rect
+                                        {::treemap-parent parent-ref
+                                         ::treemap-keypath keypath})]
+                                  (treemap (:obj child-rect) child-rect child-options)))
+                              keypaths
+                              child-rects))]
+         (reset! parent-ref rect)
+         rect)
        rect))))
 
 (defn treemap-zip [obj {:keys [w h] :as rect} {:keys [branch?
@@ -693,7 +706,7 @@
          lines []]
     (if rect
       (let [{:keys [x y w h]} rect
-            parent (::treemap-parent (meta rect))
+            parent (rect-parent rect)
             px (or (:x parent) 0)
             py (or (:y parent) 0)
             local-x (- x px)
@@ -714,10 +727,10 @@
 (defn treemap-keypath [rect]
   (loop [path ()
          rect rect]
-    (if-let [m (meta rect)]
-      (if-let [p (::treemap-keypath m)]
-        (recur (conj path p)
-               (::treemap-parent m))
+    (if-let [parent (rect-parent rect)]
+      (if-let [p (rect-keypath rect)]
+        (recur (conj path [rect p])
+               parent)
         path)
       path)))
 
@@ -872,7 +885,7 @@
   (loop [tm tm
          depth 0]
     (if tm
-      (recur (::treemap-parent (meta tm))
+      (recur (rect-parent tm)
              (inc depth))
       depth)))
 
