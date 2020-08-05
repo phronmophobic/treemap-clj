@@ -1043,14 +1043,7 @@
    ([obj]
     (lets-explore obj [800 800]))
    ([obj [w h]]
-    (let [tm (treemap obj (make-rect w h)
-                      {:branch? #(and (not (string? %)) (seqable? %))
-                       :children seq
-                       :keypath-fn default-keypath-fn
-                       :size treemap-size
-                       :padding nil
-                       :layout squarified-layout
-                       :min-area  1})
+    (let [tm (treemap obj (make-rect w h))
           tm-render (wrap-treemap-events
                      tm
                      [(render-treemap tm)
