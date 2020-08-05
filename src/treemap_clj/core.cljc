@@ -735,37 +735,44 @@
         path)
       path)))
 
-(defn treemap-keypath-str [rect]
+(defn treemap-keypath-ui [rect]
   (let [keypath (treemap-keypath rect)]
-    (clojure.string/join "\n"
-                         (->> keypath
-                              (remove (fn [[rect path]]
-                                        (#{'key 'val} path)))
-                              (map (fn [[rect p]]
-                                     (if (and (seq p)
-                                              (#{'find 'nth} (first p)))
-                                       (str (second p)
-                                            (when-let [parent (rect-parent rect)]
-                                              (let [parent-obj (:obj parent)]
-                                                ;; (prn "parent: " p parent-obj (map? parent-obj))
-                                                (str " / " (count parent-obj) " "
-                                                     (when (map? parent-obj)
-                                                       (clojure.string/join
-                                                        ", "
-                                                        (cons
-                                                         "  "
-                                                         (for [k (take 5 (keys parent-obj))
-                                                               :let [s (pr-str k)]]
-                                                           (subs s 0 (min 12 (count s))))))))
-                                                )))
-                                       p)))))))
+    (apply
+     vertical-layout
+     (->> keypath
+          (remove (fn [[rect path]]
+                    (#{'key 'val} path)))
+          (map (fn [[rect p]]
+                 (on
+                  :mouse-move
+                  (fn [_]
+                    [[:hover-keypath rect]])
+                  :mouse-down
+                  (fn [_]
+                    [[::click-keypath rect]])
+                  (if (and (seq p)
+                           (#{'find 'nth} (first p)))
+                    (horizontal-layout
+                     (ui/label (second p))
+                     (when-let [parent (rect-parent rect)]
+                       (let [parent-obj (:obj parent)]
+                         ;; (prn "parent: " p parent-obj (map? parent-obj))
+                         (horizontal-layout
+                          (ui/label (str " / " (count parent-obj) " "))
+                          (when (map? parent-obj)
+                            (apply
+                             horizontal-layout
+                             (for [k (take 5 (keys parent-obj))
+                                   :let [s (pr-str k)]]
+                               (ui/label (subs s 0 (min 12 (count s)))))))))))
+                    (ui/label p)))))))))
 
-(def treemap-keypath-str-memo (memoize treemap-keypath-str))
+(def treemap-keypath-ui-memo (memoize treemap-keypath-ui))
 
 (defeffect ::select-rect [$select-rect rect]
   (dispatch! :set $select-rect {:plines (ui/with-color [0 0 0]
                                           (parent-lines-memo rect))
-                                :keypath (treemap-keypath-str-memo rect)
+                                :keypath-ui (treemap-keypath-ui-memo rect)
                                 :obj (:obj rect)
                                 :rect rect}))
 
@@ -864,9 +871,9 @@
                 (dispatch! :set $root-rect left-rect))
           nil)))))
 
-(defui treemap-explore [& {:keys [tm select-rect hover-rect root-rect]}]
-  (let [{:keys [rect plines keypath obj]} (or hover-rect
-                                              select-rect)]
+(defui treemap-explore [& {:keys [tm select-rect hover-rect root-rect keypath-hover]}]
+  (let [{:keys [rect plines keypath-ui obj]} (or hover-rect
+                                                 select-rect)]
     (vertical-layout
      (ui/button "redo"
                 (fn []
@@ -880,7 +887,7 @@
           [[:set $hover-rect
             {:plines (ui/with-color [1 0 0]
                        (parent-lines-memo rect))
-             :keypath (treemap-keypath-str-memo rect)
+             :keypath-ui (treemap-keypath-ui-memo rect)
              :obj (:obj rect)
              :rect rect}]])
         ::treemap-click
@@ -905,13 +912,38 @@
            :mouse-out (fn []
                         [[:set $hover-rect nil]])
            :body tm))
-         plines]
+         plines
+         keypath-hover]
         )
        (when obj
          (ui/padding 10 5
                      (let [s (pprint-memo obj)]
                        (vertical-layout
-                        (ui/label keypath)
+                        (on
+                         :hover-keypath
+                         (fn [rect]
+                           (let [[ox oy]
+                                 (loop [rect rect
+                                        ox 0
+                                        oy 0]
+                                   (if rect
+                                     (recur (rect-parent rect)
+                                            (+ ox (:x rect))
+                                            (+ oy (:y rect)))
+                                     [ox oy]))]
+                             [[:set $keypath-hover
+                               (ui/translate ox oy
+                                             (ui/filled-rectangle [1 1 1 0.8]
+                                                                  (:w rect)
+                                                                  (:h rect)))]]))
+                         ::click-keypath
+                         (fn [rect]
+                           (prn "selecing rect" )
+                           [[::select-rect $select-rect rect]])
+                         (on-mouse-out
+                          :mouse-out (fn []
+                                       [[:set $keypath-hover nil]])
+                          :body keypath-ui))
                         (ui/label s ))))))))))
 
 (defn treezip [tm]
