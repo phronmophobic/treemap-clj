@@ -3,7 +3,8 @@
  :builds {:app {:target :browser
                 :output-dir "resources/public/js"
                 :asset-path "/js"
-                :compiler-options {:externs ["resources/public/js/opentype.externs.js"]}
+                :compiler-options {:externs ["resources/public/js/opentype.externs.js"]
+                                   :infer-externs :false}
                 :modules {:main {:init-fn treemap-clj.core/js-main}}}
           :rtree {:target :browser
                   :output-dir "resources/public/js"
