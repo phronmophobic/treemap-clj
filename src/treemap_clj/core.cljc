@@ -8,7 +8,8 @@
             #?(:cljs [membrane.webgl :as webgl])
             #?(:clj [clojure.data.json :as json])
             [membrane.component :as component
-             :refer [defui]])
+             :refer [defui
+                     defeffect]])
 
 
   #?(:clj (:gen-class)))
@@ -716,10 +717,9 @@
                          [x y])
                 (ui/translate x y
                               lines)]))
-      (ui/with-color [1 0 0]
-        (ui/with-stroke-width 5
-          (ui/with-style ::ui/style-stroke
-            lines))))))
+      (ui/with-stroke-width 5
+        (ui/with-style ::ui/style-stroke
+          lines)))))
 
 (def parent-lines-memo (memoize parent-lines))
 
@@ -735,21 +735,135 @@
       path)))
 
 (defn treemap-keypath-str [rect]
-  (let [keypath (treemap-keypath rect)
-        ]
-   (clojure.string/join "\n"
-                        (->> keypath
-                             (remove #{'key 'val})
-                             (map (fn [p]
-                                    (if (and (seq p)
-                                             (#{'find 'nth} (first p)))
-                                      (second p)
-                                      p)))))))
+  (let [keypath (treemap-keypath rect)]
+    (clojure.string/join "\n"
+                         (->> keypath
+                              (remove (fn [[rect path]]
+                                        (#{'key 'val} path)))
+                              (map (fn [[rect p]]
+                                     (if (and (seq p)
+                                              (#{'find 'nth} (first p)))
+                                       (str (second p)
+                                            (when-let [parent (rect-parent rect)]
+                                              (let [parent-obj (:obj parent)]
+                                                ;; (prn "parent: " p parent-obj (map? parent-obj))
+                                                (str " / " (count parent-obj) " "
+                                                     (when (map? parent-obj)
+                                                       (clojure.string/join
+                                                        ", "
+                                                        (cons
+                                                         "  "
+                                                         (for [k (take 5 (keys parent-obj))
+                                                               :let [s (pr-str k)]]
+                                                           (subs s 0 (min 12 (count s))))))))
+                                                )))
+                                       p)))))))
 
-(def treemap-keypath-str-memo treemap-keypath-str)
+(def treemap-keypath-str-memo (memoize treemap-keypath-str))
+
+(defeffect ::select-rect [$select-rect rect]
+  (dispatch! :set $select-rect {:plines (ui/with-color [0 0 0]
+                                          (parent-lines-memo rect))
+                                :keypath (treemap-keypath-str-memo rect)
+                                :obj (:obj rect)
+                                :rect rect}))
+
+(defeffect ::update-root-rect [$root-rect new-rect]
+  (dispatch! :update $root-rect
+             (fn [old-root]
+               ;; if root-rect has new-rect as a parent. don't do anything
+               (let [has-ancestor? (loop [rect old-root]
+                                     (if rect
+                                       (if (= rect new-rect)
+                                         true
+                                         (recur (rect-parent rect)))
+                                       false))]
+                 (if has-ancestor?
+                   old-root
+                   new-rect)))))
 
 
-(defui treemap-explore [& {:keys [tm select-rect hover-rect]}]
+(defeffect ::descend [$select-rect $root-rect rect]
+  (when (:children rect)
+    (let [root-rect (dispatch! :get $root-rect)
+          ;; try to find new rect by tracing root-rect
+          new-rect (loop [new-rect root-rect
+                          last-rect nil]
+                     (when new-rect
+                       (if (= new-rect rect)
+                         (when last-rect
+                           last-rect)
+                         (recur (rect-parent new-rect)
+                                new-rect))))]
+      (if new-rect
+        ;; slight race condition
+        (dispatch! ::select-rect $select-rect new-rect)
+        (let [new-rect (first (:children rect))]
+          (dispatch! ::select-rect $select-rect new-rect)
+          (dispatch! :set $root-rect new-rect))))))
+
+
+(defeffect ::move-right [$select-rect $hover-rect $root-rect rect]
+  (let [p (rect-keypath rect)]
+    (case p
+      key (when-let [prect (rect-parent rect)]
+            (when-let [new-rect (second (:children prect))]
+              (dispatch! ::select-rect $select-rect new-rect)
+              (dispatch! :set $hover-rect nil)
+              (dispatch! :set $root-rect new-rect)))
+      val nil
+      (when (seq p)
+        (case (first p)
+
+          find (let [k (second p)
+                     prect (rect-parent rect)
+                     childs (:children prect)
+                     right-rect (second (drop-while #(not= rect %) childs))]
+                 (when right-rect
+                   (dispatch! ::select-rect $select-rect right-rect)
+                   (dispatch! :set $hover-rect nil)
+                   (dispatch! :set $root-rect right-rect)))
+
+          nth (let [prect (rect-parent rect)
+                    childs (:children prect)
+                    i (min (dec (count childs))
+                           (inc (second p)))
+                    right-rect (nth childs i)]
+                (dispatch! ::select-rect $select-rect right-rect)
+                (dispatch! :set $hover-rect nil)
+                (dispatch! :set $root-rect right-rect))
+
+          nil)))))
+
+(defeffect ::move-left [$select-rect $hover-rect $root-rect rect]
+  (let [p (rect-keypath rect)]
+    (case p
+      key nil
+      val (when-let [prect (rect-parent rect)]
+            (when-let [new-rect (first (:children prect))]
+              (dispatch! ::select-rect $select-rect new-rect)
+              (dispatch! :set $hover-rect nil)
+              (dispatch! :set $root-rect new-rect)))
+      (when (seq p)
+        (case (first p)
+          find (let [k (second p)
+                     prect (rect-parent rect)
+                     childs (:children prect)
+                     left-rect (last (take-while #(not= rect %) childs))]
+                 (when left-rect
+                   (dispatch! ::select-rect $select-rect left-rect)
+                   (dispatch! :set $hover-rect nil)
+                   (dispatch! :set $root-rect left-rect)))
+
+          nth (let [i (max 0 (dec (second p)))
+                    prect (rect-parent rect)
+                    left-rect (nth (:children prect) i)]
+                (dispatch! ::select-rect $select-rect left-rect)
+                (dispatch! :set $hover-rect nil)
+                (dispatch! :set $root-rect left-rect))
+          nil)))))
+
+(defui treemap-explore [& {:keys [tm select-rect hover-rect root-rect]}]
   (let [{:keys [rect plines keypath obj]} (or hover-rect
                                               select-rect)]
     (vertical-layout
@@ -763,22 +877,33 @@
         ::treemap-hover
         (fn [rect]
           [[:set $hover-rect
-            {:plines (parent-lines-memo rect)
+            {:plines (ui/with-color [1 0 0]
+                       (parent-lines-memo rect))
              :keypath (treemap-keypath-str-memo rect)
              :obj (:obj rect)
              :rect rect}]])
         ::treemap-click
         (fn [rect]
-          [[:set $select-rect
-            {:plines (parent-lines-memo rect)
-             :keypath (treemap-keypath-str-memo rect)
-             :obj (:obj rect)
-             :rect rect}]])
-        [(on-mouse-out
+          [[:set $hover-rect nil]
+           [::select-rect $select-rect rect]])
+        [(on
+          :key-press
+          (fn [s]
+            (case s
+              ("w" :up) (when-let [parent-rect (rect-parent rect)]
+                          [[:set $hover-rect nil]
+                           [::select-rect $select-rect parent-rect]
+                           [::update-root-rect $root-rect rect]])
+              ("a" :left) [[::move-left $select-rect $hover-rect $root-rect rect]]
+              ("s" :down) [[::descend $select-rect $root-rect rect]]
+              ("d" :right) [[::move-right $select-rect $hover-rect $root-rect rect]]
+
+              nil))
+          (on-mouse-out
            ;; :hover? (get extra :treemap-hover?)
            :mouse-out (fn []
                         [[:set $hover-rect nil]])
-           :body tm)
+           :body tm))
          plines]
         )
        (when obj
@@ -907,7 +1032,7 @@
                              last
                              :obj)]
          [[::treemap-click rect]]))
-     body)))
+     (ui/no-events body))))
 
 #?
 (:clj
@@ -915,7 +1040,7 @@
    ([]
     (lets-explore (doall (read-source))))
    ([obj]
-    (lets-explore obj [1200 800]))
+    (lets-explore obj [800 800]))
    ([obj [w h]]
     (let [tm (treemap obj (make-rect w h)
                       {:branch? #(and (not (string? %)) (seqable? %))
