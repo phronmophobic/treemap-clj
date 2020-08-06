@@ -95,6 +95,13 @@
   (::treemap-keypath (meta rect)))
 
 
+(defn treezip [tm]
+  (z/zipper :children :children
+                      (fn [node children]
+                        (assoc node
+                               :children children))
+                      tm))
+
 (def algorithm :squarify)
 (def my-rect (make-rect 100 100))
 (def my-obj ["12" 3 4 5])
@@ -376,6 +383,59 @@
                                           ))))))))
       (ui/with-style ::ui/style-fill
         view))))
+
+
+(defn zip-depth [loc]
+  (-> loc second :pnodes count))
+
+(defn max-depth [rect]
+  (loop [zip (treezip rect)
+         max-depth 0]
+    (if (z/end? zip)
+      max-depth
+      (recur (z/next zip)
+             (max max-depth (zip-depth zip))))))
+
+(defn color-gradient
+  "Given a number between 0 and 1. Returns a color."
+  [num]
+  (let [i (* 4.0 num)]
+    (cond
+      (> i 3)
+      (let [n (- i 3)]
+        [1 (- 1 n) 0])
+
+      (> i 2)
+      (let [n (- i 2)]
+        [n 1 0])
+
+      (> i 1)
+      (let [n (- i 1)]
+        [0 1  (- 1 n)])
+
+      :else
+      [0 i 1])))
+
+(defn render-depth [rect]
+  (let [mdepth (max-depth rect)]
+    (loop [to-visit (seq [[0 0 0 rect]])
+           view []]
+      (if to-visit
+        (let [[depth ox oy rect] (first to-visit)]
+          (if-let [children (:children rect)]
+            (let [ox (+ ox (:x rect))
+                  oy (+ oy (:y rect))]
+              (recur (into (next to-visit)
+                           (map #(vector (inc depth) ox oy %) children))
+                     view))
+            (recur (next to-visit)
+                   (conj view
+                         (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
+                                       (ui/with-color (conj (color-gradient (/ depth mdepth)) 0.2)
+                                         (ui/rectangle (max 1 (dec (:w rect)))
+                                                       (max 1 (dec (:h rect))))))))))
+        (ui/with-style ::ui/style-fill
+          view)))))
 
 (defn coll-color [obj]
   (cond
