@@ -987,9 +987,12 @@
                                      [ox oy]))]
                              [[:set $keypath-hover
                                (ui/translate ox oy
-                                             (ui/filled-rectangle [1 1 1 0.8]
-                                                                  (:w rect)
-                                                                  (:h rect)))]]))
+                                             [(ui/filled-rectangle [1 1 1 0.8]
+                                                                   (:w rect)
+                                                                   (:h rect))
+                                              (ui/with-style ::ui/style-stroke
+                                                (ui/rectangle (:w rect)
+                                                              (:h rect)))])]]))
                          ::click-keypath
                          (fn [rect]
                            (prn "selecing rect" )
