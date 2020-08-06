@@ -935,9 +935,6 @@
   (let [{:keys [rect plines keypath-ui obj]} (or hover-rect
                                                  select-rect)]
     (vertical-layout
-     (ui/button "redo"
-                (fn []
-                  nil))
      (ui/padding
       10 10
       (horizontal-layout

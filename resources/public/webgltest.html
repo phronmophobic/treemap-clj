@@ -5,45 +5,123 @@
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <!-- <link id="ubuntu-font" href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">  -->
-    <style type="text/css">
-      body {
-          margin: 0;
-      }
-    </style>
+    <title>Treemap Demo</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="blog.css" rel="stylesheet">
+
+
   </head>
   <body>
-    <textarea id="blobarea">[1,2,3]</textarea>
-    <button id="update-btn">Update</button>
-
-    <input id="url-input" type="text" value="https://raw.githubusercontent.com/wangyingchu/DiscoverEngine_InfoDiscover/e02b432becfa8e19a205803f8039d081c2ad1e56/src/com/businessExtension/constructionSupervision/sample/template/allMaintenanceProject.json" />
-
-    <div>
-      <input type="checkbox" id="background-depth" name="background-depth"
-             checked>
-      <label for="background-depth">Background Depth</label>
-    </div>
-    <div>
-      <input type="checkbox" id="background-types" name="background-types" >
-      <label for="background-types">Background Types</label>
-    </div>
-    <div>
-      <input type="checkbox" id="lines" name="lines"
-             checked>
-      <label for="lines">lines</label>
-    </div>
-    <div>
-      <input type="checkbox" id="value-labels" name="value-labels"
-             checked>
-      <label for="value-labels">value labels</label>
+    <div class="blog-masthead">
+      <div class="container">
+        <nav class="nav blog-nav">
+          <a class="nav-link active" href="#">Home</a>
+          <a class="nav-link" href="#">New features</a>
+          <a class="nav-link" href="#">Press</a>
+          <a class="nav-link" href="#">New hires</a>
+          <a class="nav-link" href="#">About</a>
+        </nav>
+      </div>
     </div>
 
-
-    <button id="fetch-btn">Fetch</button>
-    <div id="app" >
-      <canvas width="1200" height="800" id="canvas" tabindex="1"></canvas>
+    <div class="blog-header">
+      <div class="container">
+        <h1 class="blog-title">Treemap Demo</h1>
+        <p class="lead blog-description">A graphical alternative to pprint. Treemaps are awesome.</p>
+      </div>
     </div>
-    <!-- <button style="position:fixed;top:0;right:0;" id="enlarge-canvas-right">Enlarge Right</button> -->
-    <!-- <button id="enlarge-canvas-bottom">Enlarge Bottom</button> -->
+
+    <div class="container">
+
+      <div class="row">
+
+        <div class="col-sm-8 blog-main">
+          
+
+          <h2>Load Data</h2>
+
+            <div class="form-group">
+              <label for="url-input" >Fetch via URL</label>
+              <div class="col-sm-10">
+                <input class="form-control form-control-sm" placeholder="https://mysite.com/foo.json" id="url-input" type="text" value="https://raw.githubusercontent.com/wangyingchu/DiscoverEngine_InfoDiscover/e02b432becfa8e19a205803f8039d081c2ad1e56/src/com/businessExtension/constructionSupervision/sample/template/allMaintenanceProject.json" />
+              </div>
+            </div>
+            <div class="form-group row">
+              <button class="btn btn-primary mb-2  btn-sm" id="fetch-btn">Fetch</button>
+            </div>
+
+            
+            <div class="form-group">
+              <label for="exampleFormControlTextarea1">Load from text input</label>
+              <textarea class="form-control" id="blobarea">[1,2,3]</textarea>
+              
+            </div>
+            <div class="form-group row">
+              <button class="btn btn-primary mb-2  btn-sm" id="update-btn">Load</button>
+
+            </div>
+
+            <hr/>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="background" id="background-depth" checked>
+              <label class="form-check-label" for="background-depth">Show Depth</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="background" id="background-types">
+              <label class="form-check-label" for="background-types">Show Types</label>
+            </div>
+
+
+            <!-- <div class="form-check"> -->
+            <!--   <input type="checkbox" id="background-depth" name="background-depth" -->
+            <!--          class="form-check-input" -->
+            <!--          checked> -->
+            <!--   <label class="form-check-label" for="background-depth">Background Depth</label> -->
+
+            <!-- </div> -->
+
+
+            <!-- <div class="form-check"> -->
+            <!--   <input type="checkbox" class="form-check-input" id="background-types" name="background-types" > -->
+            <!--   <label class="form-check-label" for="background-types">Background Types</label> -->
+            <!-- </div> -->
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="lines" name="lines"
+                     checked>
+              <label class="form-check-label" for="lines">lines</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="value-labels"  name="value-labels"
+                     checked>
+              <label class="form-check-label" for="value-labels">value labels</label>
+            </div>
+
+
+            <div id="app" >
+              <canvas width="1200" height="800" id="canvas" tabindex="1"></canvas>
+            </div>
+
+        </div><!-- /.blog-main -->
+      </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <!-- <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="js/ie10-viewport-bug-workaround.js"></script>
+
+
     <script src="js/opentype.min.js" type="text/javascript"></script>
     <script src="js/main.js" type="text/javascript"></script>
   </body>
