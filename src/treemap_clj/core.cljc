@@ -925,7 +925,7 @@
                 (dispatch! :set $root-rect left-rect))
           nil)))))
 
-(defui treemap-explore [& {:keys [tm select-rect hover-rect root-rect keypath-hover]}]
+(defui treemap-explore [& {:keys [tm-render select-rect hover-rect root-rect keypath-hover]}]
   (let [{:keys [rect plines keypath-ui obj]} (or hover-rect
                                                  select-rect)]
     (vertical-layout
@@ -965,7 +965,7 @@
            ;; :hover? (get extra :treemap-hover?)
            :mouse-out (fn []
                         [[:set $hover-rect nil]])
-           :body tm))
+           :body tm-render))
          plines
          keypath-hover]
         )
@@ -1000,12 +1000,7 @@
                           :body keypath-ui))
                         (ui/label s ))))))))))
 
-(defn treezip [tm]
-  (z/zipper :children :children
-                      (fn [node children]
-                        (assoc node
-                               :children children))
-                      tm))
+
 
 (comment
   (require '[membrane.example.todo :as td])
@@ -1021,7 +1016,7 @@
   (skia/run (component/make-app #'td/todo-app
                                 todo-state))
 
-  (def explore-state (atom {:tm nil
+  (def explore-state (atom {:tm-render nil
                             :selected nil}))
 
   (add-watch todo-state :explore
@@ -1043,14 +1038,13 @@
                         ;; (render-bubbles tm)
                         ]]
                    (swap! explore-state
-                          update :tm (constantly rendered))))))
+                          update :tm-render (constantly rendered))))))
 
   (skia/run (component/make-app #'treemap-explore explore-state)))
 
 
 
-(defn zip-depth [loc]
-  (-> loc second :pnodes count))
+
 
 (defn wrap-depth [root branch? children]
   (let [zip (z/zipper :children :children
@@ -1132,13 +1126,14 @@
     (let [tm (treemap obj (make-rect w h))
           tm-render (wrap-treemap-events
                      tm
-                     [(render-treemap tm)
+                     [;;(render-treemap tm)
+                      (render-depth tm)
                       (render-linetree tm)
                       (render-rect-vals tm)
                       ;; (render-bubbles tm)
                       ])
           ]
-      (skia/run (component/make-app #'treemap-explore {:tm (skia/->Cached tm-render)}))
+      (skia/run (component/make-app #'treemap-explore {:tm-render (skia/->Cached tm-render)}))
       ))))
 
 
@@ -1148,7 +1143,6 @@
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!"))
-
 
 
 
