@@ -718,8 +718,6 @@
         (ui/with-style ::ui/style-stroke
           lines)))))
 
-(def parent-lines-memo (memoize parent-lines))
-
 
 (defn treemap-keypath [rect]
   (loop [path ()
@@ -767,7 +765,7 @@
 
 (defeffect ::select-rect [$select-rect rect]
   (dispatch! :set $select-rect {:plines (ui/with-color [0 0 0]
-                                          (parent-lines-memo rect))
+                                          (parent-lines rect))
                                 :keypath-ui (treemap-keypath-ui-memo rect)
                                 :obj (:obj rect)
                                 :rect rect}))
@@ -882,7 +880,7 @@
         (fn [rect]
           [[:set $hover-rect
             {:plines (ui/with-color [1 0 0]
-                       (parent-lines-memo rect))
+                       (parent-lines rect))
              :keypath-ui (treemap-keypath-ui-memo rect)
              :obj (:obj rect)
              :rect rect}]])
