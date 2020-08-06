@@ -44,12 +44,7 @@
                     (when (.-checked lines)
                       (render-linetree tm))
                     (when (.-checked value-labels)
-                      (let [t0 (js/performance.now)
-                            ret (render-rect-vals tm)
-                            t1 (js/performance.now)]
-                        (prn "time: " (- t1 t0))
-                        ;; (js/alert (str "time: " (- t1 t0)))
-                        ret))
+                      (render-rect-vals tm))
                     
                     ;; (render-bubbles tm)
                     ])]
