@@ -358,31 +358,34 @@
    :size treemap-size
    :layout traditional-layout})
 
-(defn render-treemap [rect]
-  (loop [to-visit (seq [[0 0 rect]])
-         view []]
-    (if to-visit
-      (let [[ox oy rect] (first to-visit)]
-        (if-let [children (:children rect)]
-          (let [ox (+ ox (:x rect))
-                oy (+ oy (:y rect))]
-            (recur (into (next to-visit)
-                         (map #(vector ox oy %) children))
-                   view))
-          (recur (next to-visit)
-                 (conj view
-                       (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
-                                     (let [data (:obj rect)]
-                                       (on
-                                        :mouse-move
-                                        (fn [_]
-                                          [[:select data nil]])
-                                        (ui/with-color (conj (data-color data) 0.2)
-                                          (ui/rectangle (max 1 (dec (:w rect)))
-                                                        (max 1 (dec (:h rect))))
-                                          ))))))))
-      (ui/with-style ::ui/style-fill
-        view))))
+(defn render-treemap
+  ([rect]
+   (render-treemap rect 0.2))
+  ([rect opacity]
+   (loop [to-visit (seq [[0 0 rect]])
+          view []]
+     (if to-visit
+       (let [[ox oy rect] (first to-visit)]
+         (if-let [children (:children rect)]
+           (let [ox (+ ox (:x rect))
+                 oy (+ oy (:y rect))]
+             (recur (into (next to-visit)
+                          (map #(vector ox oy %) children))
+                    view))
+           (recur (next to-visit)
+                  (conj view
+                        (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
+                                      (let [data (:obj rect)]
+                                        (on
+                                         :mouse-move
+                                         (fn [_]
+                                           [[:select data nil]])
+                                         (ui/with-color (conj (data-color data) opacity)
+                                           (ui/rectangle (max 1 (dec (:w rect)))
+                                                         (max 1 (dec (:h rect))))
+                                           ))))))))
+       (ui/with-style ::ui/style-fill
+         view)))))
 
 
 (defn zip-depth [loc]
@@ -416,26 +419,29 @@
       :else
       [0 i 1])))
 
-(defn render-depth [rect]
-  (let [mdepth (max-depth rect)]
-    (loop [to-visit (seq [[0 0 0 rect]])
-           view []]
-      (if to-visit
-        (let [[depth ox oy rect] (first to-visit)]
-          (if-let [children (:children rect)]
-            (let [ox (+ ox (:x rect))
-                  oy (+ oy (:y rect))]
-              (recur (into (next to-visit)
-                           (map #(vector (inc depth) ox oy %) children))
-                     view))
-            (recur (next to-visit)
-                   (conj view
-                         (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
-                                       (ui/with-color (conj (color-gradient (/ depth mdepth)) 0.2)
-                                         (ui/rectangle (max 1 (dec (:w rect)))
-                                                       (max 1 (dec (:h rect))))))))))
-        (ui/with-style ::ui/style-fill
-          view)))))
+(defn render-depth
+  ([rect]
+   (render-depth rect 0.2))
+  ([rect opacity]
+   (let [mdepth (max-depth rect)]
+     (loop [to-visit (seq [[0 0 0 rect]])
+            view []]
+       (if to-visit
+         (let [[depth ox oy rect] (first to-visit)]
+           (if-let [children (:children rect)]
+             (let [ox (+ ox (:x rect))
+                   oy (+ oy (:y rect))]
+               (recur (into (next to-visit)
+                            (map #(vector (inc depth) ox oy %) children))
+                      view))
+             (recur (next to-visit)
+                    (conj view
+                          (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
+                                        (ui/with-color (conj (color-gradient (/ depth mdepth)) opacity)
+                                          (ui/rectangle (max 1 (dec (:w rect)))
+                                                        (max 1 (dec (:h rect))))))))))
+         (ui/with-style ::ui/style-fill
+           view))))))
 
 (defn coll-color [obj]
   (cond
