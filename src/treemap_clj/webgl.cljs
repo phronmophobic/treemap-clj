@@ -65,20 +65,6 @@
                             (.addEventListener cb
                                                "click"
                                                (fn [e]
-                                                 (let [ct (.-currentTarget e)]
-                                                   (prn ct)
-                                                   (when (and (= background-depth
-                                                                 ct)
-                                                              (.-checked ct))
-                                                     (set! (.-checked background-types) false))
-
-                                                   (when (and (= background-types
-                                                                 ct)
-                                                              (.-checked ct))
-                                                     (set! (.-checked background-depth) false)))
-                                                 
-                                                 
-                                                 
                                                  (update-treemap (:obj (:tm @app-state)))
                                                  ))))
 
