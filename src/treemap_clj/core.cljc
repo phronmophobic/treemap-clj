@@ -496,6 +496,7 @@
 
 (defn render-rect-vals [rect]
   (loop [to-visit (seq [[[] 0 0 0 rect]])
+         rt (rtree/rtree)
          view []]
     (if to-visit
       (let [[ppath depth ox oy rect] (first to-visit)]
@@ -505,25 +506,22 @@
             (recur (seq
                     (concat (next to-visit)
                             (map #(vector (conj ppath rect) (inc depth) ox oy %) children)))
-                   view))
+                   rt
+                   view
+                   ))
           (let [lbl (ui/with-color (rect-val-color depth)
                       (pr-label (:obj rect) 30 (ui/font mono-font (depth-font-size depth))))
                 [w h] (ui/bounds lbl)
                 rx (+ (:x rect) ox)
                 ry (+ (:y rect) oy)
-                overlaps? (some (fn [elem]
-                                  (let [[ex ey] (ui/origin elem)
-                                        [ew eh] (ui/bounds elem)]
-                                    (not (or (< (+ rx w)
-                                                ex)
-                                             (< (+ ex ew)
-                                                rx)
-                                             (< (+ ry h)
-                                                ey)
-                                             (< (+ ey eh)
-                                                ry)))))
-                                view)]
+                overlaps? (or (seq (rtree/search rt [rx ry]))
+                              (seq (rtree/search rt [(+ rx w) ry]))
+                              (seq (rtree/search rt [(+ rx w) (+ ry h)]))
+                              (seq (rtree/search rt [rx (+ ry h)])))]
             (recur (next to-visit)
+                   (if overlaps?
+                     rt
+                     (rtree/add! rt (make-rect rx ry w h)))
                    (if overlaps?
                      view
                      (conj view
