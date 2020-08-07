@@ -4,11 +4,13 @@
             [membrane.ui :as ui]
             [treemap-clj.core
              :refer [treemap
+                     keyed-treemap
                      treemap-explore
                      render-depth
                      render-rect-vals
                      render-treemap
                      render-linetree
+                     render-keys
                      wrap-treemap-events
                      make-rect]]
             [membrane.component :as component]))
@@ -26,25 +28,36 @@
 (def background-depth ($ "background-depth"))
 (def lines ($ "lines"))
 (def value-labels ($ "value-labels"))
+(def keyed-cb ($ "keyed"))
 
 (defonce app-state (atom {}))
 (defn update-treemap [obj]
   (let [
-        tm (treemap obj (make-rect 800
-                                   800))
+        keyed? (.-checked keyed-cb)
+        tm (if keyed?
+             (keyed-treemap obj (make-rect 800
+                                     800))
+             (treemap obj (make-rect 800
+                                     800)))
         tm-render (wrap-treemap-events
                    tm
                    [(cond
                       (.-checked background-depth)
                       (render-depth tm)
 
+
                       (.-checked background-types)
                       (render-treemap tm))
                     
+
                     (when (.-checked lines)
                       (render-linetree tm))
+
                     (when (.-checked value-labels)
                       (render-rect-vals tm))
+
+                    (when keyed?
+                      (render-keys tm))
                     
                     ;; (render-bubbles tm)
                     ])]
@@ -56,7 +69,8 @@
 (defonce checkbox-listens (doseq [cb [background-types
                                       background-depth
                                       lines
-                                      value-labels]]
+                                      value-labels
+                                      keyed-cb]]
                             (.addEventListener cb
                                                "click"
                                                (fn [e]

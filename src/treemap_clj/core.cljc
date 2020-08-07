@@ -46,6 +46,19 @@
   (mapv #(/ % 255.0) (type-color obj)))
 
 
+(defn default-keypath-fn [obj]
+  (cond
+    (map-entry? obj)
+    '[key val]
+
+    (map? obj)
+    (map #(list 'find %) (keys obj))
+
+    :else
+    (do
+      (assert (seqable? obj))
+      (map #(list 'nth %) (range (count obj))))))
+
 (defn treemap-size [obj]
   (if (and (seqable? obj) (not (string? obj)))
     (reduce + (map treemap-size obj))
@@ -352,11 +365,16 @@
                       (squarified-layout (map first objs-sizes) (map second objs-sizes) rest-of-rect)))))))))))
 
 
+
+
 (def treemap-options-defaults
-  {:branch? (fn [obj] (and (seqable? obj) (not (string? obj))))
+  {:branch? #(and (not (string? %)) (seqable? %))
    :children seq
    :size treemap-size
-   :layout traditional-layout})
+   :padding nil
+   :layout squarified-layout
+   :keypath-fn default-keypath-fn
+   :min-area  1})
 
 (defn render-treemap
   ([rect]
@@ -597,6 +615,26 @@
       view)))
 
 
+(defn render-keys [rect]
+  (loop [to-visit (seq [[0 0 rect]])
+         view []]
+    (if to-visit
+      (let [[ox oy rect] (first to-visit)]
+        (if-let [children (:children rect)]
+          (let [ox (+ ox (:x rect))
+                oy (+ oy (:y rect))]
+            (recur (seq
+                    (concat (next to-visit)
+                            (map #(vector ox oy %) children)))
+                   view
+                   ))
+          (recur (next to-visit)
+                 (conj view
+                       (ui/translate ox oy
+                                     (ui/label (:title rect)))))))
+      view)))
+
+
 
 (defn render-treemap-depth [rect]
   (loop [to-visit (seq [[0 0 0 rect]])
@@ -637,36 +675,20 @@
   )
 
 
-(defn default-keypath-fn [obj]
-  (cond
-    (map-entry? obj)
-    '[key val]
 
-    (map? obj)
-    (map #(list 'find %) (keys obj))
-
-    :else
-    (do
-      (assert (seqable? obj))
-      (map #(list 'nth %) (range (count obj))))))
 
 (defn treemap
   ([obj rect]
    (treemap obj rect
-            {:branch? #(and (not (string? %)) (seqable? %))
-             :children seq
-             :size treemap-size
-             :padding nil
-             :layout squarified-layout
-             :keypath-fn default-keypath-fn
-             :min-area  1}))
+            treemap-options-defaults))
   ([obj {:keys [w h] :as rect} {:keys [branch?
                                        children
                                        size
                                        layout
                                        min-area
                                        padding
-                                       keypath-fn] :as options}]
+                                       keypath-fn
+                                       recurse] :as options}]
    (let [padding (or padding
                      (fn [depth]
                        (max 0
@@ -678,6 +700,8 @@
          pad (if (fn? padding)
                (padding depth)
                padding)
+
+         recurse (or recurse treemap)
 
          include-padding (fn [n]
                            (max 1 (- n pad)))
@@ -703,12 +727,64 @@
                                       (with-meta child-rect
                                         {::treemap-parent parent-ref
                                          ::treemap-keypath keypath})]
-                                  (treemap (:obj child-rect) child-rect child-options)))
+                                  (recurse (:obj child-rect) child-rect child-options)))
                               keypaths
                               child-rects))]
          (reset! parent-ref rect)
          rect)
        rect))))
+
+
+(defn keyed-treemap
+  ([obj rect]
+   (keyed-treemap obj rect
+                  treemap-options-defaults))
+  ([obj {:keys [w h] :as rect} {:keys [branch?
+                                       children
+                                       size
+                                       layout
+                                       min-area
+                                       padding
+                                       keypath-fn] :as options}]
+   (let [depth (get options :depth 0)
+         child-options (assoc options
+                              :depth (inc depth)
+                              :recurse keyed-treemap)
+         rect (-> rect
+                  (assoc :obj obj))]
+
+     (if (map-entry? obj)
+       (let [k (key obj)
+               klabel (ui/label k)
+               [lwidth lheight] (ui/bounds klabel)]
+           (if (and (<= lwidth w)
+                    (<= lheight h))
+             (let [keypaths (if keypath-fn
+                              (keypath-fn obj)
+                              (repeat nil))
+                   parent-ref (atom nil)
+
+                   key-rect (-> (make-rect w lheight)
+                                (assoc :obj k)
+                                (assoc :title k))
+                   key-rect (with-meta key-rect
+                              {::treemap-parent parent-ref
+                               ::treemap-keypath (first keypaths)})
+
+                   val-rect (make-rect w (- h lheight))
+                   val-rect (update val-rect
+                                    :y + lheight)
+                   val-rect (with-meta val-rect
+                              {::treemap-parent parent-ref
+                               ::treemap-keypath (second keypaths)})
+                   val-rect (treemap (val obj) val-rect child-options)
+                   rect (assoc rect
+                               :children [key-rect val-rect])]
+
+               (reset! parent-ref rect)
+               rect)
+             (treemap obj rect (assoc options :recurse keyed-treemap))))
+      (treemap obj rect (assoc options :recurse keyed-treemap))))))
 
 (defn treemap-zip [obj {:keys [w h] :as rect} {:keys [branch?
                                                       children
@@ -816,7 +892,6 @@
                      (ui/label (second p))
                      (when-let [parent (rect-parent rect)]
                        (let [parent-obj (:obj parent)]
-                         ;; (prn "parent: " p parent-obj (map? parent-obj))
                          (horizontal-layout
                           (ui/label (str " / " (count parent-obj) " "))
                           (when (map? parent-obj)
@@ -998,7 +1073,6 @@
                                                               (:h rect)))])]]))
                          ::click-keypath
                          (fn [rect]
-                           (prn "selecing rect" )
                            [[::select-rect $select-rect rect]])
                          (on-mouse-out
                           :mouse-out (fn []
@@ -1129,7 +1203,7 @@
    ([obj]
     (lets-explore obj [800 800]))
    ([obj [w h]]
-    (let [tm (treemap obj (make-rect w h))
+    (let [tm (keyed-treemap obj (make-rect w h))
           tm-render (wrap-treemap-events
                      tm
                      [;;(render-treemap tm)
