@@ -77,7 +77,7 @@
       (map #(list 'nth %) (range (count obj))))))
 
 (defn treemap-size [obj]
-  (if (and (seqable? obj) (not (string? obj)))
+  (if (and obj (seqable? obj) (not (string? obj)))
     (reduce + (map treemap-size obj))
     (cond
 
@@ -385,7 +385,7 @@
 
 
 (def treemap-options-defaults
-  {:branch? #(and (not (string? %)) (seqable? %))
+  {:branch? #(and % (not (string? %)) (seqable? %))
    :children seq
    :size treemap-size
    :padding nil
