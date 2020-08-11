@@ -1144,7 +1144,9 @@
                           :mouse-out (fn []
                                        [[:set $keypath-hover nil]])
                           :body keypath-ui))
-                        (ui/label s ))))))))))
+                        (ui/label s
+                                  #?(:cljs (ui/font "MonoSpace" nil)
+                                     :clj (ui/font "Menlo.ttc" nil))))))))))))
 
 
 
