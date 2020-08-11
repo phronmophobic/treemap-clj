@@ -677,11 +677,9 @@
         (if-let [children (:children rect)]
           (let [ox (+ ox (:x rect))
                 oy (+ oy (:y rect))]
-            (recur (seq
-                    (concat (next to-visit)
-                            (map #(vector ox oy %) children)))
-                   view
-                   ))
+            (recur (into (map #(vector ox oy %) children)
+                         (next to-visit))
+                   view))
           (recur (next to-visit)
                  (conj view
                        (ui/translate ox oy
