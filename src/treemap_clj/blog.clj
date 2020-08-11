@@ -574,6 +574,37 @@
 
 
 (comment
-  (lets-explore (json/read-str (slurp
-                                "/var/tmp/test-savegame.json"))
-                [400 200]))
+  (lets-explore
+                (json/read-str (slurp
+                                "/var/tmp/test-savegame.json"))[400 200]))
+
+
+;; Sizes
+(def example-sizes
+  [[100 100]
+   [100 200]
+   [200 100]
+   [200 200]
+   [200 450]
+   [450 200]
+   [450 450]])
+
+(defn export-size-example []
+  (let [[max-w max-h] [(reduce max (map first example-sizes))
+                       (reduce max (map second example-sizes))]
+        example-data (json/read-str (slurp
+                                     "/var/tmp/test-savegame.json"))
+        ]
+    (doseq [[w h] example-sizes
+            :let [tm (keyed-treemap example-data (make-rect w h))
+                  view [(ui/spacer max-w max-h)
+                        (render-depth tm (if (< (* w h) (* 200 200) )
+                                           1
+                                           0.4))
+                        (render-keys tm)
+                        (ui/translate 0.5 0.5
+                                      (ui/with-style ::ui/style-stroke
+                                        (ui/rectangle (dec w) (dec h))))]]]
+      (skia/draw-to-image! (str "resources/public/images/sizes-example-" w "x" h ".png")
+                           view))))
+
