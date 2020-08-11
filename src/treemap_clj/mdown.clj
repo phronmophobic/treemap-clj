@@ -185,8 +185,30 @@
 
   )
 
+(defonce running? (atom false))
+(defn watch-blog []
+  (let [path "markdown/treemaps-are-awesome.md"
+        f (clojure.java.io/file "markdown/treemaps-are-awesome.md")
+        get-val #(.lastModified f)]
+    (when (not @running?)
+      (reset! running? true)
+      @(future
+        (loop [last-val nil]
+          (let [current-val (get-val)]
+            (when @running?
+              (when (not= current-val last-val)
+
+                (print "rendering blog...")
+                (flush)
+                (render-blog)
+                (print " done.\n")
+                (flush))
+
+              (Thread/sleep 500 )
+              (recur current-val))))))))
+
 (defn -main [ & args]
-  (render-blog))
+  (watch-blog))
 
 ;; for fenced code blog
 ;; (.getinfo adsf) to find lang
