@@ -58,6 +58,12 @@
       [tag {}
        (map blog-html (children this))])))
 
+(extend-type com.vladsch.flexmark.ast.StrongEmphasis
+  IBlogHtml
+  (blog-html [this]
+    [:strong
+     (map blog-html (children this))]))
+
 
 (extend-type com.vladsch.flexmark.ast.BlockQuote
   IBlogHtml
@@ -137,7 +143,7 @@
     [:meta {:name "author" :content ""}]
 
     ;; <link rel="icon" href="../../favicon.ico">
-    [:title "The title"]
+    [:title "Treemaps are awesome!"]
 
     [:link {:href "bootstrap.min.css"
             :rel "stylesheet"}]
