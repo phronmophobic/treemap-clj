@@ -47,7 +47,7 @@
             <div class="form-group">
               <label for="url-input" >Fetch via URL</label>
               <div class="col-sm-10">
-                <input class="form-control form-control-sm" placeholder="https://mysite.com/foo.json" id="url-input" type="text" value="https://raw.githubusercontent.com/wangyingchu/DiscoverEngine_InfoDiscover/e02b432becfa8e19a205803f8039d081c2ad1e56/src/com/businessExtension/constructionSupervision/sample/template/allMaintenanceProject.json" />
+                <input class="form-control form-control-sm" placeholder="https://mysite.com/foo.json" id="url-input" type="text" value="https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json" />
               </div>
             </div>
             <div class="form-group row">
@@ -67,14 +67,7 @@
 
             <hr/>
 
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="background" id="background-depth" checked>
-              <label class="form-check-label" for="background-depth">Show Depth</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="background" id="background-types">
-              <label class="form-check-label" for="background-types">Show Types</label>
-            </div>
+
 
 
             <!-- <div class="form-check"> -->
@@ -90,22 +83,67 @@
             <!--   <input type="checkbox" class="form-check-input" id="background-types" name="background-types" > -->
             <!--   <label class="form-check-label" for="background-types">Background Types</label> -->
             <!-- </div> -->
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="keyed" name="keyed"
-                     checked>
-              <label class="form-check-label" for="keyed">Prominent Keys</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="lines" name="lines"
-                     checked>
-              <label class="form-check-label" for="lines">lines</label>
-            </div>
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="value-labels"  name="value-labels"
-                     checked>
-              <label class="form-check-label" for="value-labels">value labels</label>
-            </div>
+            <fieldset class="form-group">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="keyed" name="keyed"
+                       checked>
+                <label class="form-check-label" for="keyed">Prominent Keys</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="lines" name="lines">
+                <label class="form-check-label" for="lines">Hierarchy Lines</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="value-labels"  name="value-labels" >
+                <label class="form-check-label" for="value-labels">Value Labels</label>
+              </div>
+            </fieldset>
 
+            <fieldset class="form-group">
+              <div class="row">
+                <legend class="col-form-label col-sm-2 pt-0">Background</legend>
+                <div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="background" id="background-depth" checked>
+                    <label class="form-check-label" for="background-depth">Show Depth</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="background" id="background-types">
+                    <label class="form-check-label" for="background-types">Show Types</label>
+                  </div>
+                </div>
+              </div>
+
+            </fieldset>
+
+            <fieldset class="form-group">
+
+              <div class="row">
+                <legend class="col-form-label col-sm-2 pt-0">Size</legend>
+                <div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="canvas-size" id="size-800x800" checked value="800x800">
+                    <label class="form-check-label" for="size-800x800">800x800</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="canvas-size" id="size-300x300" value="300x300">
+                    <label class="form-check-label" for="size-300x300">300x300</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="canvas-size" id="size-600x300" value="600x300">
+                    <label class="form-check-label" for="size-600x300">600x300</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="canvas-size" id="size-200x200" value="200x200">
+                    <label class="form-check-label" for="size-200x200">200x200</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="canvas-size" id="size-600x600" value="600x600">
+                    <label class="form-check-label" for="size-600x600">600x600</label>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
 
             <div id="app" >
               <canvas width="1200" height="800" id="canvas" tabindex="1"></canvas>

@@ -22,6 +22,13 @@
                            :externs ["resources/public/js/opentype.externs.js"]
                            }}]}
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
+  :repositories [["sonatype-oss-public"
+                  "https://oss.sonatype.org/content/groups/public/"]]
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
-             :dev {:dependencies [[org.clojure/data.json "1.0.0"]]}})
+             :dev {:dependencies [[org.clojure/data.json "1.0.0"]
+                                  [com.vladsch.flexmark/flexmark-all "0.62.2"]
+                                  [hiccup "1.0.5"]
+                                  [org.clojure/tools.namespace "1.1.0-SNAPSHOT"]]}
+             :provided {:dependencies [[org.clojure/test.check "0.9.0"]
+                                       ]}})

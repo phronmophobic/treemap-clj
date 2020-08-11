@@ -30,24 +30,43 @@
 (def value-labels ($ "value-labels"))
 (def keyed-cb ($ "keyed"))
 
+(def canvas-sizes (js/document.getElementsByName "canvas-size"))
+
 (defonce app-state (atom {}))
 (defn update-treemap [obj]
   (let [
         keyed? (.-checked keyed-cb)
+
+        selected-size-cb (some #(when (.-checked %)
+                                  %)
+                               canvas-sizes)
+        size-str (when selected-size-cb
+                   (.-value selected-size-cb))
+
+        [w h] (if size-str
+                (->> (clojure.string/split size-str "x" )
+                     (map #(js/parseInt % 10)))
+                [800 800])
+
+
+        treemap-rect (make-rect w h)
+
         tm (if keyed?
-             (keyed-treemap obj (make-rect 800
-                                     800))
-             (treemap obj (make-rect 800
-                                     800)))
+             (keyed-treemap obj treemap-rect)
+             (treemap obj treemap-rect))
+
+        background-opacity (if (<= (* w h) (* 350 350))
+                             0.5
+                             0.2)
         tm-render (wrap-treemap-events
                    tm
                    [(cond
                       (.-checked background-depth)
-                      (render-depth tm)
+                      (render-depth tm background-opacity)
 
 
                       (.-checked background-types)
-                      (render-treemap tm))
+                      (render-treemap tm background-opacity))
                     
 
                     (when (.-checked lines)
@@ -61,7 +80,7 @@
                     
                     ;; (render-bubbles tm)
                     ])]
-    (prn "updating?")
+
     (reset! app-state
             {:tm-render (webgl/->Cached tm-render)
              :tm tm})))
@@ -76,6 +95,13 @@
                                                (fn [e]
                                                  (update-treemap (:obj (:tm @app-state)))
                                                  ))))
+
+(defonce radio-canvas-size-listens (doseq [cb canvas-sizes]
+                                     (.addEventListener cb
+                                                        "click"
+                                                        (fn [e]
+                                                          (update-treemap (:obj (:tm @app-state)))
+                                                          ))))
 
 (defonce button-listen (.addEventListener
                         update-btn

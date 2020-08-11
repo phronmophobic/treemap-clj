@@ -37,13 +37,30 @@
    (symbol? obj) [42 40 250]
    (keyword? obj) [250 151 137]
    (string? obj) [112 210 250]
-   (number? obj)  [250 221 87 98]
+   (number? obj)  [250 221 87]
    (char? obj) [112 210 250]
    (boolean? obj) [100 250 178]
    :else [0 0 0]))
 
 (defn data-color [obj]
   (mapv #(/ % 255.0) (type-color obj)))
+
+(defn type-color-legend []
+
+  (ui/table-layout
+   (for [[title example] '[["symbol" a]
+                           ["keyword" :a]
+                           ["string" "A"]
+                           ["number" 1]
+                           ;; ["character "\a]
+                           ["boolean" true]
+                           ["other" nil]]]
+     [[(ui/rectangle 17 17)
+       (ui/translate 1 1
+        (ui/filled-rectangle (data-color example)
+                             15 15))]
+      (ui/label title)])
+   5 5))
 
 
 (defn default-keypath-fn [obj]
@@ -437,6 +454,25 @@
       :else
       [0 i 1])))
 
+(defn depth-color-legend []
+  (let [steps 20
+        width 200
+        height 50
+        colors (apply
+                horizontal-layout
+                (for [i (range steps)
+                      :let [n (/ i steps)]]
+                  (ui/filled-rectangle (color-gradient n)
+                                       (/ width steps)
+                                       height)))
+        right-label (ui/label "max depth")
+        ]
+    [colors
+     (ui/translate 0 height
+                   [(ui/label "min depth")
+                    (ui/translate (- width (ui/width right-label)) 0
+                                  right-label)])]))
+
 (defn render-depth
   ([rect]
    (render-depth rect 0.2))
@@ -483,6 +519,32 @@
 (defn linetree-stroke-width [depth]
   (max 1 (- 10 (* 2 depth))))
 
+
+(defn depth-line-legend []
+  (ui/table-layout
+   (for [[title example] [["vector" []]
+                          ["map" {:a 1}]
+                          ["map entry" (first {:a 1})]]]
+     (let [[x1 y1] [0 10]
+           [x2 y2] [30 10]
+           depth 3]
+       [[(ui/translate (+ x1) (+ y1)
+                       (ui/filled-rectangle [0 0 0]
+                                            2 2))
+
+         (ui/translate x2 y2
+                       (ui/filled-rectangle [0 0 0]
+                                            2 2))
+
+         (ui/with-style ::ui/style-stroke
+           (ui/with-stroke-width (linetree-stroke-width depth)
+             (ui/with-color (conj (coll-color example)
+                                  (coll-opacity depth))
+               (ui/path [x1 y1]
+                        [x2 y2]))))]
+        (ui/label title)]))
+   5 5))
+
 (defn render-linetree [rect]
   (loop [to-visit (seq [[[] 0 0 0 rect]])
          view []]
@@ -509,16 +571,8 @@
           (recur (next to-visit)
                  (conj view
                        (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
-                                     [#_(on
-                                         :on-mouse-down
-                                         (fn [_]
-                                           [[:select (:obj rect) ppath]])
-                                         :mouse-move
-                                         (fn [_]
-                                           [[:hover-rect (:obj rect)]])
-                                         (ui/spacer (:w rect) (:h rect)))
-                                      (ui/filled-rectangle [0 0 0]
-                                                           2 2)])))))
+                                     (ui/filled-rectangle [0 0 0]
+                                                          2 2))))))
       (ui/with-style ::ui/style-stroke
         (vec (reverse view))))))
 
@@ -676,6 +730,20 @@
 
 
 
+(defn default-padding-fn [depth]
+  (get {0 15
+        1 15
+        2 10
+        3 6
+        4 2
+        5 2
+        6 2
+        7 2
+        8 2}
+       depth
+       0))
+
+
 
 (defn treemap
   ([obj rect]
@@ -690,9 +758,7 @@
                                        keypath-fn
                                        recurse] :as options}]
    (let [padding (or padding
-                     (fn [depth]
-                       (max 0
-                            (- 20 (* 4 depth)))))
+                     default-padding-fn)
 
          depth (get options :depth 0)
          child-options (assoc options
