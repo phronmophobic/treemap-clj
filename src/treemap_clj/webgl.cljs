@@ -1,7 +1,11 @@
 (ns treemap-clj.webgl
+  (:require-macros [membrane.component :as component
+                    :refer [defui
+                            defeffect]])
   (:require [goog.net.XhrIo :as xhr]
             [membrane.webgl :as webgl]
             [membrane.ui :as ui]
+            cljs.reader
             [treemap-clj.core
              :refer [treemap
                      keyed-treemap
@@ -21,7 +25,9 @@
 (def blob-area ($ "blobarea"))
 (def update-btn ($ "update-btn"))
 (def url-input ($ "url-input"))
+(def fetch-example-select ($ "fetch-example-select"))
 (def fetch-btn ($ "fetch-btn"))
+(def fetch-example-btn ($ "fetch-example-btn"))
 
 ;; checkboxes
 (def background-types ($ "background-types"))
@@ -111,16 +117,40 @@
                                 obj (js->clj (js/JSON.parse blob))]
                             (update-treemap obj)))))
 
+(defn parse-edn-or-json [s]
+  (try
+    (cljs.reader/read-string s)
+    (catch js/Object e
+      (js->clj (js/JSON.parse s)))))
+
 (defonce fetch-listen (.addEventListener
-                         fetch-btn
-                         "click"
-                         (fn []
-                           (let [url (.-value url-input)]
-                             (xhr/send url
-                                       (fn [e]
-                                         (let [x (.-target e)
-                                               obj (js->clj (.getResponseJson x))]
-                                           (update-treemap obj))))))))
+                       fetch-btn
+                       "click"
+                       (fn []
+                         (let [url (.-value url-input)]
+                           (xhr/send url
+                                     (fn [e]
+                                       (let [x (.-target e)
+                                             obj (parse-edn-or-json (.getResponseText x))]
+                                         (update-treemap obj))))))))
+
+(defonce fetch-example-listen (.addEventListener
+                               fetch-example-btn
+                               "click"
+                               (fn []
+                                 (let [url (.-value fetch-example-select)]
+                                   (xhr/send url
+                                             (fn [e]
+                                               (let [x (.-target e)
+                                                     obj (parse-edn-or-json (.getResponseText x))]
+                                                 (update-treemap obj))))))))
+
+(defui web-wrapper [& {:keys [tm-render loading?]}]
+  (if tm-render
+    (treemap-explore :tm-render tm-render)
+    (if loading?
+      (ui/label "loading...")
+      (ui/label "No data. Try loading or fetching some!"))))
 
 (defn js-main [& args]
-  (defonce start-app (membrane.webgl/run (component/make-app #'treemap-explore app-state) {:canvas canvas})))
+  (defonce start-app (membrane.webgl/run (component/make-app #'web-wrapper app-state) {:canvas canvas})))

@@ -1,16 +1,18 @@
-# Treemaps are awesome!
-
-
 # What are treemaps?
 
-From [wikipedia](https://en.wikipedia.org/wiki/Treemapping)
+
 > treemapping is a method for displaying hierarchical data using nested figures, usually rectangles. 
+> {{blockquote-footer}}[wikipedia](https://en.wikipedia.org/wiki/Treemapping){{/blockquote-footer}}
 
 An important attribute of treemaps is that they are space filling. You provide the bounds, and the the treemap algorithm will generate a graphic that uses all of the pixels. This is in contrast to something like pprint, which generates a view of the data that is proportional to the amount of data. Bounding the size of the visual representation has the advantage that treemaps scale gracefully for small to medium sized data.
 
+Treemaps will use as many pixels as are available to represent the underlying data. In general, more pixels means more clarity. However, the treemap performs well even at relatively small sizes.
+
+![Sizes Example](images/sizes-example.gif)
+
 Treemaps are also very flexible. They can visualize any data that is tree-like which includes any data that can be represented as JSON. 
 
-At its heart, the treemap is a very simple algorithm. Given a rectangle, the treemap will subdivide the rectangle into smaller rectangles for each of the tree node's children. The
+At its heart, the treemap is a very simple algorithm. Given a rectangle, the treemap will subdivide the rectangle into smaller rectangles for each of the tree node's children.
 
 ```clojure
 (defn treemap [tree-node rect]
@@ -29,7 +31,7 @@ Here's what the process of subdivision looks like.
 
 ![basic subdivide](images/basic-subdivide.gif)
 
-You can see that the treemap shows some of the structure of the data we're trying to visualize, but there's still a lot of the structure that data that isn't revealed in this basic treemap. Next, we'll look at ways at a few tricks for improving our treemaps to capture more elements of the structure of our data. The following is by no means an exhaustive list of techniques. In fact, there's tremendous room for exploration and improvement.
+You can see that the naive treemap shows some of the structure of the data we're trying to visualize, but there's still a lot of the structure that data that isn't revealed in this basic treemap. Next, we'll look at ways at a few tricks for improving our treemaps to capture more elements of the structure of our data. The following is by no means an exhaustive list of techniques. In fact, there's tremendous room for exploration and improvement.
 
 
 ## Improving Treemaps for data for things
@@ -96,11 +98,18 @@ As an additional help the user, we allow the user to hover over the data and sho
 
 ![Hover Keyed Example](images/hover-keypath-shrunk.gif)
 
-Not only does showing the key path while hovering help show where teh data is situated, we can use the key paths as part of the UI itself. As we hover over the keypath, watch as the area for that subsection of the tree is highlighted in the treemap graphic.
+Not only does showing the key path while hovering help show where the data is situated, we can use the key paths as part of the UI itself. As we hover over the keypath, watch as the area for that subsection of the tree is highlighted in the treemap graphic.
 
 ![Hover Box Example](images/keypath-box-hover-shrunk.gif)
 
+
+# Conclusions
+
+We've explored several techniques for improving the information density and clarity of treemaps for generically visualizing heterogeneous, hierarchical data. The size of the graphic can be specificed and the treemap will use the pixels available effectively.
+
 # Future Work
+
+
 
 
 

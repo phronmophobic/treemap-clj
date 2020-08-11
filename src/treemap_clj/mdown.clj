@@ -5,6 +5,7 @@
            com.vladsch.flexmark.html.HtmlRenderer
            com.vladsch.flexmark.parser.Parser
            com.vladsch.flexmark.ext.attributes.AttributesExtension
+           com.vladsch.flexmark.ext.xwiki.macros.MacroExtension
            com.vladsch.flexmark.util.data.MutableDataSet))
 
 
@@ -13,7 +14,8 @@
 
 (defn parse [s]
   (let [options (doto (MutableDataSet.)
-                  (.set Parser/EXTENSIONS [(AttributesExtension/create)]))
+                  (.set Parser/EXTENSIONS [(AttributesExtension/create)
+                                           (MacroExtension/create)]))
         parser (-> (Parser/builder options)
                    (.build))
         doc (.parse parser s)]
@@ -60,7 +62,7 @@
 (extend-type com.vladsch.flexmark.ast.BlockQuote
   IBlogHtml
   (blog-html [this]
-    [:blockquote
+    [:blockquote.blockquote
      (map blog-html (children this))]))
 
 (extend-type com.vladsch.flexmark.ast.FencedCodeBlock
@@ -100,6 +102,20 @@
     [:br]))
 
 
+(defmulti markdown-macro (fn [macro]
+                           (.getName macro)))
+
+
+(defmethod markdown-macro "blockquote-footer" [macro]
+  [:footer.blockquote-footer
+   (map blog-html (drop-last (children macro)))])
+
+(extend-type com.vladsch.flexmark.ext.xwiki.macros.Macro
+  IBlogHtml
+  (blog-html [this]
+    (markdown-macro this)))
+
+
 
 
 
@@ -134,13 +150,13 @@
      [:div {:class "container"}
       [:nav.nav.blog-nav
        [:a.nav-link.active {:href "#"}
-        "Home"]
-       [:a.nav-link {:href "#"}
-        "New Features"]]]]
+        "Treemaps are awesome!"]
+       [:a.nav-link {:href "treemap-demo.html"}
+        "Treemap Demo"]]]]
     [:div.blog-header
        [:div.container
-        [:h1.blog-title "The blogging blog"]
-        [:p.lead.blog-description "This is all about stuff"]]]
+        [:h1.blog-title "Treemaps are awesome!"]
+        [:p.lead.blog-description "An alternative to pprint for generically visualizing heterogeneous, hierarchical data"]]]
 
 
     [:div.container

@@ -19,11 +19,8 @@
     <div class="blog-masthead">
       <div class="container">
         <nav class="nav blog-nav">
-          <a class="nav-link active" href="#">Home</a>
-          <a class="nav-link" href="#">New features</a>
-          <a class="nav-link" href="#">Press</a>
-          <a class="nav-link" href="#">New hires</a>
-          <a class="nav-link" href="#">About</a>
+          <a class="nav-link" href="treemaps-are-awesome.html">Treemaps are awesome!</a>
+          <a class="nav-link active" href="#">Treemap Demo</a>
         </nav>
       </div>
     </div>
@@ -44,28 +41,43 @@
 
           <h2>Load Data</h2>
 
-            <div class="form-group">
-              <label for="url-input" >Fetch via URL</label>
-              <div class="col-sm-10">
-                <input class="form-control form-control-sm" placeholder="https://mysite.com/foo.json" id="url-input" type="text" value="https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json" />
-              </div>
-            </div>
-            <div class="form-group row">
-              <button class="btn btn-primary mb-2  btn-sm" id="fetch-btn">Fetch</button>
-            </div>
+          <hr/>
 
+          <div class="form-group row">
+            <label for="url-input" >Fetch edn or json via URL</label>
+
+            <input class="form-control form-control-sm" placeholder="url to edn or json" id="url-input" type="text" value="" />
+
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="fetch-btn">Fetch</button>
+          </div>
+
+          <div class="form-group row">
+            <label for="fetch-example-select">Fetch example data</label>
+            <select class="form-control" id="fetch-example-select">
+              <option value="https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json">rpg save game</option>
+              <option value="https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json">Extension Builder</option>
+              <option value="https://raw.githubusercontent.com/maxemiliang/atom-config-from-laptop/b588fb5f4516265188b7d21bed1377654d818650/.apm/registry.npmjs.org/property-accessors/.cache.json">npm package</option>
+              <option value="https://raw.githubusercontent.com/starwarskidfan/test-again/d73e797a3c9834cdb330e0930bb1ed5cd2a55ca2/GIT%20Test/Themes.json">Themes description</option>
+            </select>
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="fetch-example-btn">Fetch</button>
+          </div>
+
+
+          <div class="form-group">
+            <label for="exampleFormControlTextarea1">Load from text input</label>
+            <textarea class="form-control" id="blobarea">[1,2,3]</textarea>
             
-            <div class="form-group">
-              <label for="exampleFormControlTextarea1">Load from text input</label>
-              <textarea class="form-control" id="blobarea">[1,2,3]</textarea>
-              
-            </div>
-            <div class="form-group row">
-              <button class="btn btn-primary mb-2  btn-sm" id="update-btn">Load</button>
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="update-btn">Load</button>
 
-            </div>
+          </div>
 
-            <hr/>
+          <hr/>
 
 
 
