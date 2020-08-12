@@ -21,7 +21,7 @@ deps.edn dependency:
 ```
 
 
-![API](/docs/api.png?raw=true)
+![API](/doc/api.png?raw=true)
 
 ## Usage
 
