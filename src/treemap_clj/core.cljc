@@ -1,5 +1,7 @@
 (ns treemap-clj.core
-  (:require [clojure.zip :as z]))
+  (:require [clojure.zip :as z]
+            [membrane.ui :as ui]
+            #?(:clj membrane.java2d)))
 
 
 (defn default-keypath-fn [obj]
