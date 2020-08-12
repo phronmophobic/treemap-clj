@@ -15,7 +15,6 @@
                      defeffect]]
             clojure.pprint
             [membrane.basic-components :refer [on-mouse-out]]
-            #?(:clj [clojure.data.json :as json])            
             [treemap-clj.rtree :as rtree]))
 
 
