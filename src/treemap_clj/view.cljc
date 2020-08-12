@@ -333,17 +333,17 @@
 
 (defn render-value-labels [rect]
   "Draw value labels of leaf nodes."
-  (loop [to-visit (seq [[[] 0 0 0 rect]])
+  (loop [to-visit (seq [[0 0 0 rect]])
          rt (rtree/rtree)
          view []]
     (if to-visit
-      (let [[ppath depth ox oy rect] (first to-visit)]
+      (let [[depth ox oy rect] (first to-visit)]
         (if-let [children (:children rect)]
           (let [ox (+ ox (:x rect))
                 oy (+ oy (:y rect))]
             (recur (seq
                     (concat (next to-visit)
-                            (map #(vector (conj ppath rect) (inc depth) ox oy %) children)))
+                            (map #(vector (inc depth) ox oy %) children)))
                    rt
                    view
                    ))
