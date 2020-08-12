@@ -21,8 +21,16 @@ deps.edn dependency:
 ```
 
 
-![API](/doc/api.png?raw=true)
+## Usage
 
+
+Creating a treemap can be broken down into 3 steps:
+
+1. layout
+2. render
+3. draw
+
+![API](/doc/api.png?raw=true)
 
 
 ### Save a treemap as an image
@@ -67,7 +75,7 @@ deps.edn dependency:
 
 Currently only available on Mac OSX and Ubuntu
 
-From the command line: `lein run -m treemap-clj.treem <edn or json file`
+From the command line: `lein run -m treemap-clj.treem <edn or json file>`
 
 Note: you must have `data.json` (eg. `[org.clojure/data.json "1.0.0"]`) as a dependency to read json files.
 
@@ -82,9 +90,9 @@ From the repl:
 
 ### Rendering your own treemap layers
 
-The layout and rendering steps are intentionally broken up to make it so treemaps can be utilized in many contexts. 
+The layout and rendering steps are intentionally broken up in order to make it easy to use treemaps in different contexts.
 
-Treemaps are layout out using `treemap-clj.core/treemap` or treemap-clj.core/keyed-treemap`. Both functions return a single `treemap-clj.core/Rect`.
+Treemaps are layed out out using `treemap-clj.core/treemap` or `treemap-clj.core/keyed-treemap`. Both functions return a single `treemap-clj.core/Rect`.
 
 
 
