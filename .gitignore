@@ -27,3 +27,5 @@ js/
 yarn.lock
 package-lock.json
 /package.json
+
+resources/public/blog.html
