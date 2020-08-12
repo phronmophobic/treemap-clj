@@ -1,10 +1,27 @@
 # treemap-clj
 
-FIXME: description
+An alternative to pprint for generically visualizing heterogeneous, hierarchical data
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Leiningen dependency:
+
+```
+[com.phronemophobic/treemap-clj "0.9.0"]
+```
+
+deps.edn dependency:
+
+```
+{:deps
+ {
+  com.phronemophobic/treemap-clj {:mvn/version "0.9.0"}
+  }
+}
+```
+
+
+![API](/docs/api.png?raw=true)
 
 ## Usage
 
