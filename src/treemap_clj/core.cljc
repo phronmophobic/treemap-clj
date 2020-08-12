@@ -279,6 +279,42 @@
        0))
 
 (defn treemap
+  "Given an object and a rectangle, layout a treemap and return a treemap-clj.core/Rect
+
+  `options` is a map that can containt the following keys:
+
+  `branch?` branch? must be a fn of one arg that returns true if passed a node
+   that can have children (but may not)
+
+  `children` children must be a fn of one
+   arg that returns a sequence of the children. Will only be called on
+   nodes for which branch? returns true.
+
+  `size` size is a function that returns the size of a node.
+  If called on a branch?, the size must be the sum of its children.
+  The size is used to calculate the area of the leaf nodes.
+
+  `layout` layout is a function that takes 3 parameters
+  objs: a sequence of objects
+  sizes: a sequence of sizes that correspond to the objs
+  rect: a Rect that specifies the bounds available
+  The layout function should return a sequence of Rects that correspond the objs passed in.
+  See `traditional-layout` for an example.
+
+  `min-area` The minumum area that should try to be subdivided. `treemap` will
+  stop subdividing once it breaks rectangles down into areas smaller than `min-area`.
+
+  `padding` specifies the padding added at each level of the tree.
+  Can either be a constant number or it can be function that takes 1 argument
+  which is the current depth.
+
+  `keypath-fn` Optional. if provided, should be a function that receives a
+  tree branch and returns a sequence of keypaths that correspond to the
+  children of the branch.
+
+  `recurse` Optional. if provided, should be a function that
+  will be called to subdivide the next level of the tree.
+  "
   ([obj rect]
    (treemap obj rect
             treemap-options-defaults))
@@ -335,6 +371,44 @@
 
 
 (defn keyed-treemap
+  "Given an object and a rectangle, layout a treemap and return a treemap-clj.core/Rect.
+  Will emphasize map keys if space is available. Rects that have enough room
+  to fit the key title will have a `:title` key on the corresponding Rect.
+
+  `options` is a map that can containt the following keys:
+
+  `branch?` branch? must be a fn of one arg that returns true if passed a node
+   that can have children (but may not)
+
+  `children` children must be a fn of one
+   arg that returns a sequence of the children. Will only be called on
+   nodes for which branch? returns true.
+
+  `size` size is a function that returns the size of a node.
+  If called on a branch?, the size must be the sum of its children.
+  The size is used to calculate the area of the leaf nodes.
+
+  `layout` layout is a function that takes 3 parameters
+  objs: a sequence of objects
+  sizes: a sequence of sizes that correspond to the objs
+  rect: a Rect that specifies the bounds available
+  The layout function should return a sequence of Rects that correspond the objs passed in.
+  See `traditional-layout` for an example.
+
+  `min-area` The minumum area that should try to be subdivided. `treemap` will
+  stop subdividing once it breaks rectangles down into areas smaller than `min-area`.
+
+  `padding` specifies the padding added at each level of the tree.
+  Can either be a constant number or it can be function that takes 1 argument
+  which is the current depth.
+
+  `keypath-fn` Optional. if provided, should be a function that receives a
+  tree branch and returns a sequence of keypaths that correspond to the
+  children of the branch.
+
+  `recurse` Optional. if provided, should be a function that
+  will be called to subdivide the next level of the tree.
+  "
   ([obj rect]
    (keyed-treemap obj rect
                   treemap-options-defaults))
