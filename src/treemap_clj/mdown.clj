@@ -180,7 +180,7 @@
   (let [post-html (parse-blog)
         page-html (blog-page post-html)
         html-str (html page-html)]
-    (spit "resources/public/blog.html"
+    (spit "resources/public/treemaps-are-awesome.html"
           html-str))
 
   )

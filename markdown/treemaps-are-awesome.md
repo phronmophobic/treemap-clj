@@ -1,8 +1,6 @@
-# What are treemaps?
+# Why treemaps?
 
-
-> treemapping is a method for displaying hierarchical data using nested figures, usually rectangles. 
-> {{blockquote-footer}}[wikipedia](https://en.wikipedia.org/wiki/Treemapping){{/blockquote-footer}}
+Treemaps are an underutilized visualization that are capable of generically summarizing data of many shapes and sizes. To date, they've mostly been used for displaying the files consuming all of your disk space, but with a few tweaks, treemaps can be a flexible tool for exploring and navigating messy data blobs.
 
 Treemaps are space filling. You provide the bounds, and the the treemap algorithm will generate a graphic that uses all of the pixels. This is in contrast to something like pprint, which generates a view of the data that is proportional to the amount of data. Bounding the size of the visual representation has the advantage that treemaps scale gracefully for small to medium sized data.
 
@@ -12,7 +10,12 @@ Treemaps will use as many pixels as are available to represent the underlying da
 
 Treemaps are very flexible. They can visualize any data that is tree-like which includes any data that can be represented as JSON. 
 
-At its heart, constructing a treemap is simple. Given some tree-like data and a rectangle, subdivide the rectangle into smaller rectangles for each of the tree's branches and then recursively apply the same algorithm for each branch.
+# What are treemaps?
+
+> treemapping is a method for displaying hierarchical data using nested figures, usually rectangles.
+> {{blockquote-footer}}[wikipedia](https://en.wikipedia.org/wiki/Treemapping){{/blockquote-footer}}
+
+At its heart, constructing a treemap is straightforward. Given some tree-like data and a rectangle, subdivide the rectangle into smaller rectangles for each of the tree's branches and then recursively apply the same algorithm for each branch.
 
 ```clojure
 (defn treemap [tree-node rect]
@@ -45,7 +48,7 @@ Treemaps are really good at using all the available pixels, but there's still a 
 
 ## Types
 
-One of the most obvious improvements is to paint the background of each rectangle with the type of the data it represents. Here's what that looks like:
+One of the more obvious improvements is to paint the background of each rectangle with the type of the data it represents. Here's what that looks like:
 
 ![Type Background](images/type-background.png)
 
@@ -73,7 +76,7 @@ Another way to visualize the shape of data is to simply draw lines from parents 
 
 ![Line Depth](images/line-bare-demo.png)
 
-The main drawback of hierarchy lines is that the lines can overlap and obscure descendent rectangles. We can partially alleviate the overlapping issue by reducing the heirarchy line's opacity for the top of the tree. However, for certain data shapes, the lines can still be an issue. Another way to declutter the graphic while still utilizing heirarchy lines to show lineage is to allow the user to user the mouse to over hover the graphic and only show the hierarchy line of the element that is currently being hovered.
+The main drawback of hierarchy lines is that the lines can overlap and obscure descendent rectangles. We can partially alleviate the overlapping issue by reducing the heirarchy line's opacity near the top of the tree. However, for certain data shapes, the lines can still be an issue. Another way to declutter the graphic while still utilizing heirarchy lines is to allow the user to hover over the graphic and only show the hierarchy line of the element that is currently under the mouse.
 
 Below is a visualization of the same data as above, but using the background to show depth and only showing the hierarchy lines when hovering.
 
@@ -81,7 +84,7 @@ Below is a visualization of the same data as above, but using the background to 
 
 ## Labels
 
-For small examples it's also possible to simply label all of the data.
+For small examples it's possible to simply label all of the data.
 
 ```edn
 {:a [0 1 2 3 4],
@@ -125,16 +128,35 @@ Data browsers like [rebl](https://github.com/cognitect-labs/REBL-distro) excel a
 
 ### Schemas
 
-Schemas excel at providing an abstract summary of data. Schemas have trouble with deeply nested data, data that are out of sync with the schema, and data that don't have a schema. Additionally, schemas don't usually detail real world usage. They often contain properties that are no longer used in practice or have developed new meaning that is at odds with the original property name. Schemas are still very useful and can complement tools that work with concrete instances of data like treemaps, `pprint`, and data browsers.
-
-# Conclusions
-
-We've explored several techniques for improving the information density and clarity of treemaps for generically visualizing heterogeneous, hierarchical data. The size of the graphic can be specificed and the treemap will use the pixels available effectively.
+Schemas excel at providing an abstract summary of data. Schemas have trouble with deeply nested data, data that are out of sync with the schema, and data that don't have a schema. Additionally, schemas don't usually detail real world usage. They often contain properties that are no longer used or have developed new meaning compared to what the original property name would suggest. Schemas are still very useful and can complement tools that work with concrete instances of data like treemaps, `pprint`, and data browsers.
 
 # Future Work
 
+**More sophisticated layout**
+Treemap layout in `treemap-clj` is fairly naive. The layout only considers one level at a time and only uses simple to heuristics to prefer squarish rectangles (aspect ratios close to 1) over long and thin rectangles.
 
+Currently, layout of the treemap rectangles is only done one layer at at time. It should be possible to produce better (for various metrics of better) layouts by considering more than one layer of the tree at a time.
 
+**Non rectangular treemaps**
+All `treemap-clj` layouts subdivide rectangles into smaller rectangles. However, the [literature](https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/NoBr12a.pdf) contains algorithms that subdivide areas into other shapes which could have interesting applications.
+
+**Interactive depth rendering**
+Allowing a user to interactively render a treemap up to X level of depth is likely to be an interesting way of exploring a data structure.
+
+**Alternative coloring schemes**
+Only two uses of color have been presented as part of `treemap-clj`, depth and data type. Other coloring schemes should be investigated.
+
+**Alternative size functions**
+As noted above, all `treemap-clj` implementations use a leaf size of 1. Plugging in different sizing functions would allow the user to emphasize different elements of a data structure.
+
+**Use Layout direction to encode more information**
+If you look at other visualization graphics, the direction on the chart typically encode information (eg. a financial chart that goes up and to the right is usually a positive sign). The directions on a treemap don't encode any meaning. It should be possible to place rectangles with certain properties close to either the edges or towards the center to emphasize different qualities of the data.
+
+**Graphic Design**
+I'm bad at graphic design and have probably violated innumerable graphic design principles. Incorporating graphic design expertise would greatly increase clarity and legibility.
+
+**Constraints, schemas and specs**
+Formal data specifications encode a ton of information. Encoding these specifications into the treemap graphic should increase the information density.
 
 
 # References
