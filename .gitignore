@@ -29,3 +29,7 @@ package-lock.json
 /package.json
 
 resources/public/blog.html
+resources/public/images/*
+doc/*.pdf
+doc/*.psd
+todo.org
