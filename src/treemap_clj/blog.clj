@@ -13,13 +13,13 @@
             [clojure.tools.namespace.find :as find]
             [clojure.java.classpath :as classpath]
             [membrane.skia :as skia]
-            [treemap-clj.view :refer [render-linetree
+            [treemap-clj.view :refer [render-hierarchy-lines
                                       type-color-legend
-                                      render-treemap
+                                      render-background-types
                                       depth-color-legend
                                       render-depth
                                       depth-line-legend
-                                      render-rect-vals
+                                      render-value-labels
                                       render-keys
                                       lets-explore]]
             [treemap-clj.core :refer [keyed-treemap
@@ -70,14 +70,7 @@
                  tm (keyed-treemap obj (make-rect w h)
                                    (merge treemap-options-defaults
                                           {:padding 0}))
-                 tm-render [
-                            ;; (render-treemap tm 1)
-                            ;; (render-depth tm )
-                            ;; (render-keys tm)
-                            (render-linetree tm)
-                            ;; (render-rect-vals tm)
-                            ;; (render-bubbles tm)
-                            ]
+                 tm-render [(render-hierarchy-lines tm)]
                  ]
              [tm-render obj])
            (catch Exception e
@@ -102,14 +95,7 @@
              tm (keyed-treemap obj (make-rect w h)
                                (merge treemap-options-defaults
                                       {:padding 0}))
-             tm-render [
-                        ;; (render-treemap tm 1)
-                        ;; (render-depth tm )
-                        ;; (render-keys tm)
-                        (render-linetree tm)
-                        ;; (render-rect-vals tm)
-                        ;; (render-bubbles tm)
-                        ]
+             tm-render [(render-hierarchy-lines tm)]
              ]
          tm-render)
        (catch Exception e
@@ -291,9 +277,10 @@
    (horizontal-layout
     (type-color-legend)
     (ui/spacer 50 0)
-    (render-treemap (treemap type-example (make-rect 400 200)
-                             (merge treemap-options-defaults
-                                    {:padding 0}))
+    (render-background-types
+     (treemap type-example (make-rect 400 200)
+              (merge treemap-options-defaults
+                     {:padding 0}))
                     1)))
   )
 #_(skia/run render-type-example)
@@ -495,8 +482,7 @@
      (horizontal-layout
       (depth-line-legend)
       (ui/spacer 50 0)
-      [ ;;(render-depth tm )
-       (render-linetree tm)]))))
+      [(render-hierarchy-lines tm)]))))
 #_(skia/run render-line-example
   )
 #_(skia/draw-to-image! (str "resources/public/images/line-bare-demo.png")
@@ -524,9 +510,9 @@
                                               5 4}
                                              depth
                                              0))}))]
-     [(render-treemap tm)
-      (render-linetree tm)
-      (render-rect-vals tm)
+     [(render-background-types tm)
+      (render-hierarchy-lines tm)
+      (render-value-labels tm)
       ])))
 
 
@@ -575,11 +561,7 @@
 (defn render-keyed-example []
   (skia/->Cached
    (let [tm (keyed-treemap @nm (make-rect 400 400))]
-     [ ;;(render-treemap tm)
-      ;; (render-linetree tm)
-      ;; (render-rect-vals tm)
-      
-      (render-depth tm 0.4)
+     [(render-depth tm 0.4)
       (render-keys tm)
       ])))
 

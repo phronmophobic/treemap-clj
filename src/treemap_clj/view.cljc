@@ -8,12 +8,13 @@
                                       translate
                                       tree-depth
                                       keyed-treemap
-                                      treemap]]
+                                      treemap
+                                      treemap-options-defaults]]
             [membrane.component :as component
              :refer [defui
                      defeffect]]
+            clojure.pprint
             [membrane.basic-components :refer [on-mouse-out]]
-            #?(:clj [membrane.skia :as skia])
             #?(:clj [clojure.data.json :as json])            
             [treemap-clj.rtree :as rtree]))
 
@@ -96,10 +97,13 @@
           group-elems)))))
 
 
-(defn render-treemap
+(defn render-background-types
+  "Draw filled rectangles of leaf rects
+  with colors corresponding to the types."
   ([rect]
-   (render-treemap rect 0.2))
-  ([rect opacity]
+   (render-background-types rect {:opacity 0.2}))
+  ([rect {:keys [opacity]
+          :as opts}]
    (loop [to-visit (seq [[0 0 rect]])
           view []]
      (if to-visit
@@ -166,6 +170,8 @@
                                   right-label)])]))
 
 (defn render-depth
+  "Draw filled rectangles of leaf rects
+  with colors corresponding to the depth."
   ([rect]
    (render-depth rect 0.2))
   ([rect opacity]
@@ -237,7 +243,8 @@
         (ui/label title)]))
    5 5))
 
-(defn render-linetree [rect]
+(defn render-hierarchy-lines [rect]
+  "Draw hierarchy lines"
   (loop [to-visit (seq [[[] 0 0 0 rect]])
          view []]
     (if to-visit
@@ -325,7 +332,8 @@
   #?(:clj "Menlo.ttc"
      :cljs nil))
 
-(defn render-rect-vals [rect]
+(defn render-value-labels [rect]
+  "Draw value labels of leaf nodes."
   (loop [to-visit (seq [[[] 0 0 0 rect]])
          rt (rtree/rtree)
          view []]
@@ -340,8 +348,10 @@
                    rt
                    view
                    ))
-          (let [lbl (ui/with-color (rect-val-color depth)
-                      (pr-label (:obj rect) 30 (ui/font mono-font (depth-font-size depth))))
+          (let [lbl (if-let [title (:title rect)]
+                      (ui/label title)
+                      (ui/with-color (rect-val-color depth)
+                        (pr-label (:obj rect) 30 (ui/font mono-font (depth-font-size depth)))))
                 [w h] (ui/bounds lbl)
                 rx (+ (:x rect) ox)
                 ry (+ (:y rect) oy)
@@ -380,44 +390,6 @@
       view)))
 
 
-
-(defn render-treemap-depth [rect]
-  (loop [to-visit (seq [[0 0 0 rect]])
-         view []]
-
-    (if to-visit
-      (let [[depth ox oy rect] (first to-visit)]
-        (if-let [children (:children rect)]
-          (let [ox (+ ox (:x rect))
-                oy (+ oy (:y rect))]
-            (recur (into (next to-visit)
-                         (map #(vector (inc depth) ox oy %) children))
-                   (conj view
-                         (ui/with-color (coll-color (:obj rect))
-                           (ui/translate ox oy
-                                         (ui/with-style ::ui/style-stroke
-                                           (ui/with-stroke-width (max 1 (- 10 (* 2 depth)))
-                                             (ui/rectangle (max 1 (dec (:w rect)))
-                                                           (max 1 (dec (:h rect))))
-                                             )))))))
-          (recur (next to-visit)
-                 (conj view
-                       (ui/translate (+ (:x rect) ox) (+ (:y rect) oy)
-                                     (let [data (:obj rect)] 
-                                       (on
-                                        :mouse-move
-                                        (fn [_]
-                                          [[:select data]])
-                                        [(ui/with-color (data-color data)
-                                           (ui/rectangle (max 1 (dec (:w rect)))
-                                                         (max 1 (dec (:h rect)))))
-                                         #_(ui/scissor-view [0 0] [(:w rect)
-                                                                   (:h rect)]
-                                                            (ui/label data
-                                                                      (ui/font nil 10)))])))))))
-      (ui/with-style ::ui/style-fill
-        view)))
-  )
 
 (def pprint-memo (memoize #(let [s (with-out-str (clojure.pprint/pprint %))]
                              (subs s 0 (min (count s) 500)))))
@@ -666,46 +638,6 @@
                                      :clj (ui/font "Menlo.ttc" nil))))))))))))
 
 
-(comment
-  (require '[membrane.example.todo :as td])
-
-  (def todo-state (atom {:todos
-                         [{:complete? false
-                           :description "first"}
-                          {:complete? false
-                           :description "second"}
-                          {:complete? true
-                           :description "third"}]
-                         :next-todo-text ""}))
-  (skia/run (component/make-app #'td/todo-app
-                                todo-state))
-
-  (def explore-state (atom {:tm-render nil
-                            :selected nil}))
-
-  (add-watch todo-state :explore
-             (fn [k ref old new]
-               (future
-                 (let [tm (treemap (dissoc new
-                                           ::component/extra
-                                           ::component/context) (make-rect 400 400)
-                                   {:branch? #(and (not (string? %)) (seqable? %))
-                                    :children seq
-                                    :size treemap-size
-                                    :layout squarified-layout
-                                    :min-area 1})
-
-                       #_ #_ rendered (render-treemap-depth tm)
-                       rendered
-                       [(render-linetree tm)
-                        (render-rect-vals tm)
-                        ;; (render-bubbles tm)
-                        ]]
-                   (swap! explore-state
-                          update :tm-render (constantly rendered))))))
-
-  (skia/run (component/make-app #'treemap-explore explore-state)))
-
 (defn treemap-rtree [tm]
   (loop [to-visit (seq [[0 0 tm]])
          rects []]
@@ -746,25 +678,3 @@
          [[::treemap-click rect]]))
      (ui/no-events body))))
 
-#?
-(:clj
- (defn lets-explore
-   ([obj]
-    (lets-explore obj [800 800]))
-   ([obj [w h]]
-    (let [tm (keyed-treemap obj (make-rect w h)
-                            #_(merge treemap-options-defaults
-                                   {:padding 0}))
-          tm-render (wrap-treemap-events
-                     tm
-                     [
-                      ;; (render-treemap tm )
-                      (render-depth tm 0.4)
-                      ;; (render-linetree tm)
-                      (render-keys tm)
-                      ;; (render-rect-vals tm)
-                      ;; (render-bubbles tm)
-                      ])
-          ]
-      (skia/run (component/make-app #'treemap-explore {:tm-render (skia/->Cached tm-render)}))
-      ))))

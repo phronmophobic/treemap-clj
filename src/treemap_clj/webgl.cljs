@@ -6,16 +6,17 @@
             [membrane.webgl :as webgl]
             [membrane.ui :as ui]
             cljs.reader
+            [treemap-clj.view
+             :refer [render-depth
+                     render-value-labels
+                     render-background-types
+                     render-hierarchy-lines
+                     render-keys
+                     treemap-explore
+                     wrap-treemap-events]]
             [treemap-clj.core
              :refer [treemap
                      keyed-treemap
-                     treemap-explore
-                     render-depth
-                     render-rect-vals
-                     render-treemap
-                     render-linetree
-                     render-keys
-                     wrap-treemap-events
                      make-rect]]
             [membrane.component :as component]))
 
@@ -72,17 +73,20 @@
 
 
                       (.-checked background-types)
-                      (render-treemap tm background-opacity))
+                      (render-background-types tm background-opacity))
                     
 
                     (when (.-checked lines)
-                      (render-linetree tm))
+                      (render-hierarchy-lines tm))
 
-                    (when (.-checked value-labels)
-                      (render-rect-vals tm))
+                    (cond
+                      (.-checked value-labels)
+                      (render-value-labels tm)
 
-                    (when keyed?
+                      keyed?
                       (render-keys tm))
+
+
                     
                     ;; (render-bubbles tm)
                     ])]
