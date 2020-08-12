@@ -428,36 +428,36 @@
 
      (if (map-entry? obj)
        (let [k (key obj)
-               klabel (ui/label k)
-               [lwidth lheight] (ui/bounds klabel)]
-           (if (and (<= lwidth w)
-                    (<= lheight h))
-             (let [keypaths (if keypath-fn
-                              (keypath-fn obj)
-                              (repeat nil))
-                   parent-ref (atom nil)
+             klabel (ui/label k)
+             [lwidth lheight] (ui/bounds klabel)]
+         (if (and (<= lwidth w)
+                  (<= lheight h))
+           (let [keypaths (if keypath-fn
+                            (keypath-fn obj)
+                            (repeat nil))
+                 parent-ref (atom nil)
 
-                   key-rect (-> (make-rect w lheight)
-                                (assoc :obj k)
-                                (assoc :title k))
-                   key-rect (with-meta key-rect
-                              {::treemap-parent parent-ref
-                               ::treemap-keypath (first keypaths)})
+                 key-rect (-> (make-rect w lheight)
+                              (assoc :obj k)
+                              (assoc :title k))
+                 key-rect (with-meta key-rect
+                            {::treemap-parent parent-ref
+                             ::treemap-keypath (first keypaths)})
 
-                   val-rect (make-rect w (- h lheight))
-                   val-rect (update val-rect
-                                    :y + lheight)
-                   val-rect (with-meta val-rect
-                              {::treemap-parent parent-ref
-                               ::treemap-keypath (second keypaths)})
-                   val-rect (treemap (val obj) val-rect child-options)
-                   rect (assoc rect
-                               :children [key-rect val-rect])]
+                 val-rect (make-rect w (- h lheight))
+                 val-rect (update val-rect
+                                  :y + lheight)
+                 val-rect (with-meta val-rect
+                            {::treemap-parent parent-ref
+                             ::treemap-keypath (second keypaths)})
+                 val-rect (treemap (val obj) val-rect child-options)
+                 rect (assoc rect
+                             :children [key-rect val-rect])]
 
-               (reset! parent-ref rect)
-               rect)
-             (treemap obj rect (assoc options :recurse keyed-treemap))))
-      (treemap obj rect (assoc options :recurse keyed-treemap))))))
+             (reset! parent-ref rect)
+             rect)
+           (treemap obj rect (assoc options :recurse keyed-treemap))))
+       (treemap obj rect (assoc options :recurse keyed-treemap))))))
 
 (defn treemap-zip [obj {:keys [w h] :as rect} {:keys [branch?
                                                       children
