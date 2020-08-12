@@ -39,6 +39,7 @@
 
 (def canvas-sizes (js/document.getElementsByName "canvas-size"))
 
+(defonce app (atom nil))
 (defonce app-state (atom {}))
 (defn update-treemap [obj]
   (let [
@@ -93,7 +94,8 @@
 
     (reset! app-state
             {:tm-render (webgl/->Cached tm-render)
-             :tm tm})))
+             :tm tm})
+    (membrane.webgl/redraw @app)))
 
 (defonce checkbox-listens (doseq [cb [background-types
                                       background-depth
@@ -156,5 +158,6 @@
       (ui/label "loading...")
       (ui/label "No data. Try loading or fetching some!"))))
 
+
 (defn js-main [& args]
-  (defonce start-app (membrane.webgl/run (component/make-app #'web-wrapper app-state) {:canvas canvas})))
+  (reset! app (membrane.webgl/run (component/make-app #'web-wrapper app-state) {:canvas canvas})))
