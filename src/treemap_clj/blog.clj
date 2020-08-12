@@ -1,7 +1,9 @@
 (ns treemap-clj.blog
   (:require [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
-            [membrane.ui :as ui]
+            [membrane.ui :as ui
+             :refer [vertical-layout
+                     horizontal-layout]]
             [clojure.data.json :as json]
             [membrane.basic-components :as basic]
             [membrane.component :as component
@@ -10,9 +12,24 @@
             [clojure.zip :as z]
             [clojure.tools.namespace.find :as find]
             [clojure.java.classpath :as classpath]
-            [membrane.skia :as skia])
+            [membrane.skia :as skia]
+            [treemap-clj.view :refer [render-linetree
+                                      type-color-legend
+                                      render-treemap
+                                      depth-color-legend
+                                      render-depth
+                                      depth-line-legend
+                                      render-rect-vals
+                                      render-keys
+                                      lets-explore]]
+            [treemap-clj.core :refer [keyed-treemap
+                                      treemap
+                                      make-rect
+                                      treemap-options-defaults
+                                      treezip
+                                      zip-depth]])
   
-  (:use treemap-clj.core))
+  )
 
 
 (s/def ::tree (s/keys :req [::children]))
@@ -522,11 +539,11 @@
 (defn namespace-map []
   (let [nss (->> (find/find-namespaces(classpath/classpath))
                  (filter #(.startsWith (name %) "clojure.")))]
-    (try
-      (doseq [ns nss]
-        (require ns))
-      (catch Exception e
-        (println e)))
+    (doseq [ns nss]
+      (try
+        (require ns)
+        (catch Exception e
+          (println e))))
     (let [publics (loop [publics {}
                          nss (seq nss)]
                     (if nss
@@ -567,16 +584,17 @@
       ])))
 
 
-(lets-explore @nm [400 400])
-#_(skia/run render-keyed-example)
-#_(skia/draw-to-image! (str "resources/public/images/keyed-example.png")
-                     (render-keyed-example))
+
 
 
 (comment
+  #_(lets-explore @nm [400 400])
+  #_(skia/run render-keyed-example)
+  #_(skia/draw-to-image! (str "resources/public/images/keyed-example.png")
+                         (render-keyed-example))
   (lets-explore
-                (json/read-str (slurp
-                                "/var/tmp/test-savegame.json"))[400 200]))
+   (json/read-str (slurp
+                   "/var/tmp/test-savegame.json"))[400 200]))
 
 
 ;; Sizes
