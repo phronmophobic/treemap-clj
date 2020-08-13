@@ -120,7 +120,7 @@ The `:children` are offset by all of their parents' `x` and `y` coodinates.
 
 Rendering a layer is as simple as treewalking. 
 
-#### Using simple loop/recur
+#### Render example using loop/recur
 
 ```
 (def black [0 0 0])
@@ -143,7 +143,7 @@ Rendering a layer is as simple as treewalking.
       view)))
 ```
 
-#### Using clojure.zip
+#### Render example using clojure.zip
 
 `clojure.zip` makes treewalking very straightforward. This produces the same result as above.
 
