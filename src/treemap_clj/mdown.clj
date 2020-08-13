@@ -158,7 +158,9 @@
        [:a.nav-link.active {:href "#"}
         "Treemaps are awesome!"]
        [:a.nav-link {:href "treemap-demo.html"}
-        "Treemap Demo"]]]]
+        "Treemap Demo"]
+       [:a.nav-link {:href "https://github.com/phronmophobic/treemap-clj"}
+        "Code on Github"]]]]
     [:div.blog-header
        [:div.container
         [:h1.blog-title "Treemaps are awesome!"]
