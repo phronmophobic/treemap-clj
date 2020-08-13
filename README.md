@@ -2,6 +2,12 @@
 
 An alternative to pprint for generically visualizing heterogeneous, hierarchical data
 
+## Rationale
+
+Treemaps are an underutilized visualization that are capable of generically summarizing data of many shapes and sizes. To date, they've mostly been used for displaying the files consuming all of your disk space, but with a few tweaks, treemaps can be a flexible tool for exploring and navigating messy data blobs.
+
+For more background, check out [treemaps are awesome!](https://blog.phronemophobic.com/treemap/treemaps-are-awesome.html)
+
 ## Installation
 
 Leiningen dependency:
