@@ -68,7 +68,7 @@ One way to visualize which rectangles share the same parent is to add a little p
 
 ![Depth Background](images/depth-padding.png)
 
-Awesome. Just a little spacing helps track the different branches of the tree and see which elements share the same parents. However, there are some limitations with using only spacing to show grouping. How much padding should each level of the hierarchy have? Adding too little padding makes the hiearchies less apparent. Adding too much spacing can waste pixels that could otherwise be more effective. The shape of the data will also influence how much padding is necessary. Determining the amount of padding that works well on various different types of data is still an area that needs work.
+Awesome. Just a little spacing helps track the different branches of the tree and see which elements share the same parents. However, there are some limitations with using only spacing to show grouping. How much padding should each level of the hierarchy have? Adding too little padding makes the hierarchies less apparent. Adding too much spacing can waste pixels that could otherwise be more effective. The shape of the data will also influence how much padding is necessary. Determining the amount of padding that works well on various different types of data is still an area that needs work.
 
 ### Hierarchy Lines
 
@@ -76,7 +76,7 @@ Another way to visualize the shape of data is to simply draw lines from parents 
 
 ![Line Depth](images/line-bare-demo.png)
 
-The main drawback of hierarchy lines is that the lines can overlap and obscure descendent rectangles. We can partially alleviate the overlapping issue by reducing the heirarchy line's opacity near the top of the tree. However, for certain data shapes, the lines can still be an issue. Another way to declutter the graphic while still utilizing heirarchy lines is to allow the user to hover over the graphic and only show the hierarchy line of the element that is currently under the mouse.
+The main drawback of hierarchy lines is that the lines can overlap and obscure descendant rectangles. We can partially alleviate the overlapping issue by reducing the hierarchy line's opacity near the top of the tree. However, for certain data shapes, the lines can still be an issue. Another way to declutter the graphic while still utilizing hierarchy lines is to allow the user to hover over the graphic and only show the hierarchy line of the element that is currently under the mouse.
 
 Below is a visualization of the same data as above, but using the background to show depth and only showing the hierarchy lines when hovering.
 
@@ -116,7 +116,7 @@ There are several tools that help us to gain an intuition for a particular data 
 
 ### Treemaps
 
-Treemaps excel at displaying high level structure that is heirarchical, heterogenous, and approximately square (ie. the data is about as many layers deep as it is wide). Treemaps struggle with data that is either (wide and shallow) or (thin and deep). 
+Treemaps excel at displaying high level structure that is heirarchical, heterogeneous, and approximately square (ie. the data is about as many layers deep as it is wide). Treemaps struggle with data that is either (wide and shallow) or (thin and deep). 
 
 ### pprint
 
@@ -157,6 +157,9 @@ I'm bad at graphic design and have probably violated innumerable graphic design 
 
 **Constraints, schemas and specs**
 Formal data specifications encode a ton of information. Encoding these specifications into the treemap graphic should increase the information density.
+
+**Zooming in and out**
+Just like with geographic maps, it should be possible to zoom in on a part of a treemap to reveal more detail or zoom out to view higher level data features.
 
 
 # References
