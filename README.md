@@ -98,7 +98,7 @@ From the repl:
 
 The layout and rendering steps are intentionally broken up in order to make it easy to use treemaps in different contexts.
 
-Treemaps are layed out out using `treemap-clj.core/treemap` or `treemap-clj.core/keyed-treemap`. Both functions return a single `treemap-clj.core/Rect`.
+Treemaps are layed out using `treemap-clj.core/treemap` or `treemap-clj.core/keyed-treemap`. Both functions return a single `treemap-clj.core/Rect`.
 
 
 
@@ -124,7 +124,7 @@ Each rectangle has enough info to draw a rectangle (keys `x`, `y`, `w`, `h`) as 
 
 The `:children` are offset by all of their parents' `x` and `y` coodinates.
 
-Rendering a layer is as simple as treewalking. 
+Rendering a layer is as simple as treewalking. `treemap-clj` uses [membrane](https://github.com/phronmophobic/membrane) for graphics, but you can use whichever graphics library you desire.
 
 #### Render example using loop/recur
 
@@ -182,7 +182,7 @@ Rendering a layer is as simple as treewalking.
 
 On macosx, `keyed-treemap` may cause an annoying java dock icon to appear. There are 2 ways to prevent this:
 
-1. add `-Dapple.awt.UIElement=true` to your java options
+1. add `-Dapple.awt.UIElement=true` to your jvm options
 2. Use the following snippet before calling `keyed-treemap`
 ```
 (let [ui-element (System/getProperty "apple.awt.UIElement")]
