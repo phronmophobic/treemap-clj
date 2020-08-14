@@ -100,7 +100,9 @@
   IBlogHtml
   (blog-html [this]
     [:img {:src (-> this .getUrl str)
-           :alt (-> this (.getText) str)}]))
+           :alt (-> this (.getText) str)
+           :style "max-width: 90vw;height:auto"}]))
+
 
 (extend-type com.vladsch.flexmark.ast.SoftLineBreak
   IBlogHtml
