@@ -8,7 +8,7 @@ Treemaps will use as many pixels as are available to represent the underlying da
 
 ![Sizes Example](images/sizes-example.gif)
 
-Treemaps are very flexible. They can visualize any data that is tree-like which includes any data that can be represented as JSON. 
+Treemaps are very flexible. They can visualize any data that is tree-like which includes any data that can be represented as JSON or edn. 
 
 # What are treemaps?
 
@@ -34,7 +34,7 @@ Here's what the process of subdivision looks like.
 
 ![basic subdivide](images/basic-subdivide.gif)
 
-You can see that the naive treemap shows some of the structure of the data we're trying to visualize, but many elements of data's structure that aren't revealed in this basic treemap. Next, we'll look at a few tricks for improving our treemaps to capture more elements our data's structure. The following is by no means an exhaustive list of techniques. In fact, there's tremendous room for exploration and improvement.
+You can see that the naive treemap shows some of the structure of the data we're trying to visualize, but many elements of the data's structure aren't revealed in this basic treemap. Next, we'll look at a few tricks for improving our treemaps to capture more elements of our data's structure. The following is by no means an exhaustive list of techniques. In fact, there's tremendous room for experimentation and improvement.
 
 
 ## Improving the traditional treemap
@@ -150,7 +150,7 @@ Only two uses of color have been presented as part of `treemap-clj`, depth and d
 As noted above, all `treemap-clj` implementations use a leaf size of 1. Plugging in different sizing functions would allow the user to emphasize different elements of a data structure.
 
 **Use Layout direction to encode more information**
-If you look at other visualization graphics, the direction on the chart typically encode information (eg. a financial chart that goes up and to the right is usually a positive sign). The directions on a treemap don't encode any meaning. It should be possible to place rectangles with certain properties close to either the edges or towards the center to emphasize different qualities of the data.
+If you look at other visualization graphics, the directions on the chart typically encode information (eg. a financial chart that goes up and to the right is usually a positive sign). The directions on a treemap don't encode any meaning. It should be possible to place rectangles with certain properties close to either the edges or towards the center to emphasize different qualities of the data.
 
 **Graphic Design**
 I'm bad at graphic design and have probably violated innumerable graphic design principles. Incorporating graphic design expertise would greatly increase clarity and legibility.
@@ -162,7 +162,7 @@ Formal data specifications encode a ton of information. Encoding these specifica
 Just like with geographic maps, it should be possible to zoom in on a part of a treemap to reveal more detail or zoom out to view higher level data features.
 
 
-# References
+# Further Reading
 
 
 Visualizing business information using generalized treemaps
