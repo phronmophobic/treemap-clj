@@ -143,6 +143,8 @@
     [:meta {:name "author" :content "Adrian smith"}]
 
     ;; <link rel="icon" href="../../favicon.ico">
+    [:link {:rel "icon"
+            :href "favicon.ico"}]
     [:title "Treemaps are awesome!"]
 
     [:link {:href "bootstrap.min.css"
