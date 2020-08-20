@@ -166,13 +166,13 @@ Just like with geographic maps, it should be possible to zoom in on a part of a 
 
 
 Visualizing business information using generalized treemaps
-[https://pure.tue.nl/ws/files/47041749/631721-1.pdf](https://pure.tue.nl/ws/files/47041749/631721-1.pdf)
+[link](https://pure.tue.nl/ws/files/47041749/631721-1.pdf)
 
 Visualizing Business Data with Generalized Treemaps
-[https://ieeexplore.ieee.org/document/4015431](https://ieeexplore.ieee.org/document/4015431)
+[link](https://ieeexplore.ieee.org/document/4015431)
 
 Computing Voronoi Treemaps
-[https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/NoBr12a.pdf](https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/NoBr12a.pdf)
+[link](https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/NoBr12a.pdf)
 
 Fast Dynamic Voronoi Treemaps
-[https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/isvd.pdf](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/isvd.pdf)
+[link](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/isvd.pdf)
