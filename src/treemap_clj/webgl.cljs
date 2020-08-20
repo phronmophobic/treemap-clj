@@ -137,7 +137,7 @@
                            (xhr/send url
                                      (fn [e]
                                        (let [x (.-target e)
-                                             obj (parse-edn-or-json (.getResponseText x))]
+                                             obj (parse-edn-or-json (.getResponseText ^js x))]
                                          (update-treemap obj))))))))
 
 (defonce fetch-example-listen (.addEventListener
@@ -148,7 +148,7 @@
                                    (xhr/send url
                                              (fn [e]
                                                (let [x (.-target e)
-                                                     obj (parse-edn-or-json (.getResponseText x))]
+                                                     obj (parse-edn-or-json (.getResponseText ^js x))]
                                                  (update-treemap obj))))))))
 
 (defui web-wrapper [& {:keys [tm-render loading?]}]
