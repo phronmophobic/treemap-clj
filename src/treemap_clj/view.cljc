@@ -444,16 +444,18 @@
                     (horizontal-layout
                      (ui/label (second p))
                      ;; show statistics of key paths
-                     #_(when-let [parent (rect-parent rect)]
+                     (when-let [parent (rect-parent rect)]
                          (let [parent-obj (:obj parent)]
                            (horizontal-layout
                             (ui/label (str " / " (count parent-obj) " "))
                             (when (map? parent-obj)
                               (apply
                                horizontal-layout
-                               (for [k (take 5 (keys parent-obj))
-                                     :let [s (pr-str k)]]
-                                 (ui/label (subs s 0 (min 12 (count s)))))))))))
+                               (interpose
+                                (ui/spacer 8 0)
+                                (for [k (take 5 (keys parent-obj))
+                                      :let [s (pr-str k)]]
+                                  (ui/label (subs s 0 (min 12 (count s))))))))))))
                     (ui/label p)))))))))
 
 (def treemap-keypath-ui-memo (memoize treemap-keypath-ui))
