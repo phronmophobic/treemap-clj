@@ -8,19 +8,6 @@
                  [com.phronemophobic/membrane "0.9.11-beta"]
                  [com.github.davidmoten/rtree "0.8.7"]]
   :main ^:skip-aot treemap-clj.core
-  :plugins [[lein-cljsbuild "1.1.7"]]
-  :cljsbuild {:builds
-              [{:id "explore"
-                :source-paths ["src"]
-                :figwheel {:on-jsload "membrane.explore/on-js-reload"}
-                :compiler {:main treemap-clj.core
-                           :asset-path "js/compiled/out.explore"
-                           :output-to "resources/public/js/compiled/explore.js"
-                           :output-dir "resources/public/js/compiled/out.explore"
-                           :source-map-timestamp true
-                           ;; :optimizations :advanced
-                           :externs ["resources/public/js/opentype.externs.js"]
-                           }}]}
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
