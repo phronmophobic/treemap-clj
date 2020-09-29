@@ -6,6 +6,7 @@
             [membrane.webgl :as webgl]
             [membrane.ui :as ui]
             cljs.reader
+            clojure.edn
             [treemap-clj.view
              :refer [render-depth
                      render-value-labels
@@ -41,61 +42,70 @@
 
 (defonce app (atom nil))
 (defonce app-state (atom {}))
-(defn update-treemap [obj]
-  (let [
-        keyed? (.-checked keyed-cb)
+(defn update-treemap
+  ([obj errors]
+   (if errors
+     (do
+       (reset! app-state
+               {:tm-render nil
+                :errors errors})
+       (membrane.webgl/redraw @app))
+     (update-treemap obj)))
+  ([obj]
+   (let [
+         keyed? (.-checked keyed-cb)
 
-        selected-size-cb (some #(when (.-checked %)
-                                  %)
-                               canvas-sizes)
-        size-str (when selected-size-cb
-                   (.-value selected-size-cb))
+         selected-size-cb (some #(when (.-checked %)
+                                   %)
+                                canvas-sizes)
+         size-str (when selected-size-cb
+                    (.-value selected-size-cb))
 
-        [w h] (if size-str
-                (->> (clojure.string/split size-str "x" )
-                     (map #(js/parseInt % 10)))
-                [800 800])
-
-
-        treemap-rect (make-rect w h)
-
-        tm (if keyed?
-             (keyed-treemap obj treemap-rect)
-             (treemap obj treemap-rect))
-
-        background-opacity (if (<= (* w h) (* 350 350))
-                             0.5
-                             0.2)
-        tm-render (wrap-treemap-events
-                   tm
-                   [(cond
-                      (.-checked background-depth)
-                      (render-depth tm background-opacity)
+         [w h] (if size-str
+                 (->> (clojure.string/split size-str "x" )
+                      (map #(js/parseInt % 10)))
+                 [800 800])
 
 
-                      (.-checked background-types)
-                      (render-background-types tm background-opacity))
-                    
+         treemap-rect (make-rect w h)
 
-                    (when (.-checked lines)
-                      (render-hierarchy-lines tm))
+         tm (if keyed?
+              (keyed-treemap obj treemap-rect)
+              (treemap obj treemap-rect))
 
-                    (cond
-                      (.-checked value-labels)
-                      (render-value-labels tm)
+         background-opacity (if (<= (* w h) (* 350 350))
+                              0.5
+                              0.2)
+         tm-render (wrap-treemap-events
+                    tm
+                    [(cond
+                       (.-checked background-depth)
+                       (render-depth tm background-opacity)
 
-                      keyed?
-                      (render-keys tm))
+
+                       (.-checked background-types)
+                       (render-background-types tm background-opacity))
+                     
+
+                     (when (.-checked lines)
+                       (render-hierarchy-lines tm))
+
+                     (cond
+                       (.-checked value-labels)
+                       (render-value-labels tm)
+
+                       keyed?
+                       (render-keys tm))
 
 
-                    
-                    ;; (render-bubbles tm)
-                    ])]
+                     
+                     ;; (render-bubbles tm)
+                     ])]
 
-    (reset! app-state
-            {:tm-render (webgl/->Cached tm-render)
-             :tm tm})
-    (membrane.webgl/redraw @app)))
+     (reset! app-state
+             {:tm-render (webgl/->Cached tm-render)
+              :tm tm})
+     (membrane.webgl/redraw @app))))
 
 (defonce checkbox-listens (doseq [cb [background-types
                                       background-depth
@@ -114,20 +124,30 @@
                                                         (fn [e]
                                                           (update-treemap (:obj (:tm @app-state)))
                                                           ))))
+(defn parse-edn-or-json [s]
+  (try
+    [nil (clojure.edn/read-string {:default (fn [tag x]
+                                              (prn "readign tag" tag x)
+                                              x)}
+                                  s)]
+    (catch js/Object edn-error
+      (prn edn-error)
+      (try
+        [nil (js->clj (js/JSON.parse s))]
+        (catch js/Object json-error
+          (prn json-error)
+          [[edn-error json-error]
+           nil])))))
 
 (defonce button-listen (.addEventListener
                         update-btn
                         "click"
                         (fn []
                           (let [blob (.-value blob-area)
-                                obj (js->clj (js/JSON.parse blob))]
-                            (update-treemap obj)))))
+                                [errs obj] (parse-edn-or-json blob)]
+                            (update-treemap obj errs)))))
 
-(defn parse-edn-or-json [s]
-  (try
-    (cljs.reader/read-string s)
-    (catch js/Object e
-      (js->clj (js/JSON.parse s)))))
+
 
 (defonce fetch-listen (.addEventListener
                        fetch-btn
@@ -137,8 +157,8 @@
                            (xhr/send url
                                      (fn [e]
                                        (let [x (.-target e)
-                                             obj (parse-edn-or-json (.getResponseText ^js x))]
-                                         (update-treemap obj))))))))
+                                             [errs obj] (parse-edn-or-json (.getResponseText ^js x))]
+                                         (update-treemap obj errs))))))))
 
 (defonce fetch-example-listen (.addEventListener
                                fetch-example-btn
@@ -148,15 +168,28 @@
                                    (xhr/send url
                                              (fn [e]
                                                (let [x (.-target e)
-                                                     obj (parse-edn-or-json (.getResponseText ^js x))]
-                                                 (update-treemap obj))))))))
+                                                     [errs obj] (parse-edn-or-json (.getResponseText ^js x))]
+                                                 (update-treemap obj errs))))))))
 
-(defui web-wrapper [& {:keys [tm-render loading?]}]
-  (if tm-render
+(defui web-wrapper [& {:keys [tm-render loading? errors]}]
+  (cond
+
+    tm-render
     (treemap-explore :tm-render tm-render)
-    (if loading?
-      (ui/label "loading...")
-      (ui/label "No data. Try loading or fetching some!"))))
+
+
+    errors
+    (apply
+     ui/vertical-layout
+     (for [error errors]
+       (ui/label (.-message error))))
+
+    loading?
+    (ui/label "loading...")
+
+    
+    :else
+    (ui/label "No data. Try loading or fetching some!")))
 
 
 (defn js-main [& args]
