@@ -2,9 +2,11 @@
   (:require [treemap-clj.view :refer [treemap-explore
                                       wrap-treemap-events
                                       render-depth
+                                      render-hierarchy-lines
                                       render-keys]]
             [membrane.component :as component]
             [treemap-clj.core :refer [keyed-treemap
+                                      treemap
                                       make-rect]]
             [membrane.skia :as skia]
             [clojure.data.json :as json]
@@ -22,7 +24,8 @@
                      tm
                      [
                       (render-depth tm 0.4)
-                      (render-keys tm)
+                      ;; (render-hierarchy-lines tm)
+                      ;; (render-keys tm)
                       ])
           ]
       (skia/run (component/make-app #'treemap-explore {:tm-render (skia/->Cached tm-render)})))))
