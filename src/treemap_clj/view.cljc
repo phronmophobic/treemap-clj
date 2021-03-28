@@ -562,7 +562,7 @@
                 (dispatch! :set $root-rect left-rect))
           nil)))))
 
-(defui treemap-explore [& {:keys [tm-render select-rect hover-rect root-rect keypath-hover]}]
+(defui treemap-explore [{:keys [tm-render select-rect hover-rect root-rect keypath-hover]}]
   (let [{:keys [rect plines keypath-ui obj]} (or hover-rect
                                                  select-rect)]
     (vertical-layout
@@ -597,9 +597,9 @@
               nil))
           (on-mouse-out
            ;; :hover? (get extra :treemap-hover?)
-           :mouse-out (fn []
-                        [[:set $hover-rect nil]])
-           :body tm-render))
+           {:mouse-out (fn []
+                         [[:set $hover-rect nil]])
+            :body tm-render}))
          plines
          keypath-hover]
         )
@@ -631,9 +631,9 @@
                          (fn [rect]
                            [[::select-rect $select-rect rect]])
                          (on-mouse-out
-                          :mouse-out (fn []
-                                       [[:set $keypath-hover nil]])
-                          :body keypath-ui))
+                          {:mouse-out (fn []
+                                        [[:set $keypath-hover nil]])
+                           :body keypath-ui}))
                         (ui/label s
                                   #?(:cljs (ui/font "MonoSpace" nil)
                                      :clj (ui/font "Menlo.ttc" nil))))))))))))

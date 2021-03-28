@@ -171,11 +171,11 @@
                                                      [errs obj] (parse-edn-or-json (.getResponseText ^js x))]
                                                  (update-treemap obj errs))))))))
 
-(defui web-wrapper [& {:keys [tm-render loading? errors]}]
+(defui web-wrapper [{:keys [tm-render loading? errors]}]
   (cond
 
     tm-render
-    (treemap-explore :tm-render tm-render)
+    (treemap-explore {:tm-render tm-render})
 
 
     errors
@@ -193,4 +193,6 @@
 
 
 (defn js-main [& args]
-  (reset! app (membrane.webgl/run (component/make-app #'web-wrapper app-state) {:canvas canvas})))
+  (reset! app (membrane.webgl/run (component/make-app #'web-wrapper app-state) {:container canvas})))
+
+

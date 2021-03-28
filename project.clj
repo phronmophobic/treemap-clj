@@ -5,7 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/clojurescript "1.10.764"]
-                 [com.phronemophobic/membrane "0.9.15-beta-SNAPSHOT"]
+                 [com.phronemophobic/membrane "0.9.23-beta"]
                  [com.github.davidmoten/rtree "0.8.7"]]
   :main ^:skip-aot treemap-clj.core
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
