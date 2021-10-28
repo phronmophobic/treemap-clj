@@ -292,7 +292,8 @@
 
   `size` size is a function that returns the size of a node.
   If called on a branch?, the size must be the sum of its children.
-  The size is used to calculate the area of the leaf nodes.
+  The size is used to calculate the area of the leaf nodes. Sizes
+  must be greater than zero.
 
   `layout` layout is a function that takes 3 parameters
   objs: a sequence of objects
@@ -349,9 +350,16 @@
               (> (* w h)
                  (or min-area 0)))
        (let [childs (children obj)
-             child-rects (layout childs (map size childs) rect)
+             child-sizes (map size childs)
+             _ (assert (every? pos? child-sizes)
+                       "Sizes must be greater than zero.")
+             child-rects (layout childs child-sizes rect)
              keypaths (if keypath-fn
-                         (keypath-fn obj)
+                        (let [keypaths (keypath-fn obj)]
+                          (assert (= (count keypaths)
+                                     (count child-rects))
+                                  "Number of keypaths and children must match! Did you change :children, but not :keypath-fn?")
+                          keypaths)
                          (repeat nil))
              ;; we would use a promise, but `promise` doesn't exist in cljs
              parent-ref (atom nil)
@@ -386,7 +394,8 @@
 
   `size` size is a function that returns the size of a node.
   If called on a branch?, the size must be the sum of its children.
-  The size is used to calculate the area of the leaf nodes.
+  The size is used to calculate the area of the leaf nodes. Sizes
+  must be greater than zero.
 
   `layout` layout is a function that takes 3 parameters
   objs: a sequence of objects
