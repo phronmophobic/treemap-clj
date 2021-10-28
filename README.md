@@ -41,7 +41,7 @@ Creating a treemap can be broken down into 3 steps:
 
 ### Save a treemap as an image
 
-```
+```clojure
 (def obj {:a (range 5)
           :b (range 5)
           :c (range 5)})
@@ -87,7 +87,7 @@ Note: you must have `data.json` (eg. `[org.clojure/data.json "1.0.0"]`) as a dep
 
 From the repl:
 
-```
+```clojure
 (require '[treemap-clj.treem :as treem])
 
 (def my-obj {:a 1})
@@ -102,7 +102,7 @@ Treemaps are layed out using `treemap-clj.core/treemap` or `treemap-clj.core/key
 
 
 
-```
+```clojure
 > (treemap-clj.core/treemap {:a 1} (treemap-clj.core/make-rect 100 100))
  {:x 0,
   :y 0,
@@ -128,7 +128,8 @@ Rendering a layer is as simple as treewalking. `treemap-clj` uses [membrane](htt
 
 #### Render example using loop/recur
 
-```
+```clojure
+(require '[membrane.ui :as ui])
 (def black [0 0 0])
 (defn render-dots [rect]
   (loop [to-visit (seq [[0 0 rect]])
@@ -153,7 +154,8 @@ Rendering a layer is as simple as treewalking. `treemap-clj` uses [membrane](htt
 
 `clojure.zip` makes treewalking very straightforward. This produces the same result as above.
 
-```
+```clojure
+(require '[membrane.ui :as ui])
 (require '[clojure.zip :as z])
 (def black [0 0 0])
 (defn render-dots-zip [tm]
@@ -184,7 +186,7 @@ On macosx, `keyed-treemap` may cause an annoying java dock icon to appear. There
 
 1. add `-Dapple.awt.UIElement=true` to your jvm options
 2. Use the following snippet before calling `keyed-treemap`
-```
+```clojure
 (let [ui-element (System/getProperty "apple.awt.UIElement")]
   (when (nil? ui-element)
     (System/setProperty "apple.awt.UIElement" "true")))
