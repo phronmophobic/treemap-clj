@@ -1,4 +1,4 @@
-(defproject com.phronemophobic/treemap-clj "0.2.3"
+(defproject com.phronemophobic/treemap-clj "0.2.4"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [com.phronemophobic/membrane "0.9.31.0-beta"]
                  [com.github.davidmoten/rtree "0.8.7"]]
+  :resource-paths []
   :main ^:skip-aot treemap-clj.core
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
   :target-path "target/%s"
