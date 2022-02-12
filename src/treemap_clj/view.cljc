@@ -13,6 +13,7 @@
             [membrane.component :as component
              :refer [defui
                      defeffect]]
+            [com.phronemophobic.viscous :as viscous]
             clojure.pprint
             [membrane.basic-components :refer [on-mouse-out]]
             [treemap-clj.rtree :as rtree]))
@@ -390,9 +391,6 @@
 
 
 
-(def pprint-memo (memoize #(let [s (with-out-str (clojure.pprint/pprint %))]
-                             (subs s 0 (min (count s) 500)))))
-
 
 (defn parent-lines [rect]
   (loop [rect rect
@@ -605,38 +603,39 @@
         )
        (when obj
          (ui/padding 10 5
-                     (let [s (pprint-memo obj)]
-                       (vertical-layout
-                        (on
-                         :hover-keypath
-                         (fn [rect]
-                           (let [[ox oy]
-                                 (loop [rect rect
-                                        ox 0
-                                        oy 0]
-                                   (if rect
-                                     (recur (rect-parent rect)
-                                            (+ ox (:x rect))
-                                            (+ oy (:y rect)))
-                                     [ox oy]))]
-                             [[:set $keypath-hover
-                               (ui/translate ox oy
-                                             [(ui/filled-rectangle [1 1 1 0.8]
-                                                                   (:w rect)
-                                                                   (:h rect))
-                                              (ui/with-style ::ui/style-stroke
-                                                (ui/rectangle (:w rect)
-                                                              (:h rect)))])]]))
-                         ::click-keypath
-                         (fn [rect]
-                           [[::select-rect $select-rect rect]])
-                         (on-mouse-out
-                          {:mouse-out (fn []
-                                        [[:set $keypath-hover nil]])
-                           :body keypath-ui}))
-                        (ui/label s
-                                  #?(:cljs (ui/font "MonoSpace" nil)
-                                     :clj (ui/font "Menlo.ttc" nil))))))))))))
+                     (vertical-layout
+                      (on
+                       :hover-keypath
+                       (fn [rect]
+                         (let [[ox oy]
+                               (loop [rect rect
+                                      ox 0
+                                      oy 0]
+                                 (if rect
+                                   (recur (rect-parent rect)
+                                          (+ ox (:x rect))
+                                          (+ oy (:y rect)))
+                                   [ox oy]))]
+                           [[:set $keypath-hover
+                             (ui/translate ox oy
+                                           [(ui/filled-rectangle [1 1 1 0.8]
+                                                                 (:w rect)
+                                                                 (:h rect))
+                                            (ui/with-style ::ui/style-stroke
+                                              (ui/rectangle (:w rect)
+                                                            (:h rect)))])]]))
+                       ::click-keypath
+                       (fn [rect]
+                         [[::select-rect $select-rect rect]])
+                       (on-mouse-out
+                        {:mouse-out (fn []
+                                      [[:set $keypath-hover nil]])
+                         :body keypath-ui}))
+                      (let [width (get extra [::inspector :width] 70)
+                            height (get extra [::inspector :height] 30)]
+                        (viscous/inspector {:obj (viscous/wrap obj)
+                                            :width width
+                                            :height height}))))))))))
 
 
 (defn treemap-rtree [tm]
