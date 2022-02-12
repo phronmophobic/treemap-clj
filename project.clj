@@ -8,7 +8,6 @@
                  [com.phronemophobic/viscous "1.1"]
                  [com.github.davidmoten/rtree "0.8.7"]]
   :resource-paths []
-  :main ^:skip-aot treemap-clj.core
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}
