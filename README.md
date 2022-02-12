@@ -13,13 +13,13 @@ For more background, check out [treemaps are awesome!](https://blog.phronemophob
 Leiningen dependency:
 
 ```
-[com.phronemophobic/treemap-clj "0.2.4"]
+[com.phronemophobic/treemap-clj "0.2.5"]
 ```
 
 deps.edn dependency:
 
 ```
-com.phronemophobic/treemap-clj {:mvn/version "0.2.4"}
+com.phronemophobic/treemap-clj {:mvn/version "0.2.5"}
 ```
 
 
