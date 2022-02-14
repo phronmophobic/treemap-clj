@@ -188,6 +188,15 @@ On macosx, `keyed-treemap` may cause an annoying java dock icon to appear. There
     (System/setProperty "apple.awt.UIElement" "true")))
 ```
 
+## Further Reading
+
+[Visualizing business information using generalized treemaps](https://pure.tue.nl/ws/files/47041749/631721-1.pdf)
+
+[Visualizing Business Data with Generalized Treemaps](https://ieeexplore.ieee.org/document/4015431)
+
+[Computing Voronoi Treemaps](https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/NoBr12a.pdf)
+
+[Fast Dynamic Voronoi Treemaps](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/isvd.pdf)
 
 
 ## License
