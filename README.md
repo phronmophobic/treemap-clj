@@ -14,7 +14,7 @@ For more background, check out [treemaps are awesome!](https://blog.phronemophob
 
 ## Example Output
 
-Example outputs for various sizes for the this [data](https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json). 
+Example outputs for various sizes. Example [data](https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json). 
 
 ![Example output](https://blog.phronemophobic.com/treemap/images/sizes-example.gif)
 
