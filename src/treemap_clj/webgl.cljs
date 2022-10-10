@@ -42,6 +42,8 @@
 
 (defonce app (atom nil))
 (defonce app-state (atom {}))
+(defn repaint! []
+  ((::webgl/repaint @app)))
 (defn update-treemap
   ([obj errors]
    (if errors
@@ -49,7 +51,7 @@
        (reset! app-state
                {:tm-render nil
                 :errors errors})
-       (membrane.webgl/redraw @app))
+       (repaint!))
      (update-treemap obj)))
   ([obj]
    (let [
@@ -105,7 +107,7 @@
      (reset! app-state
              {:tm-render (webgl/->Cached tm-render)
               :tm tm})
-     (membrane.webgl/redraw @app))))
+     (repaint!))))
 
 (defonce checkbox-listens (doseq [cb [background-types
                                       background-depth

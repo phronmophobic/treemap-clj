@@ -1,5 +1,4 @@
-{:source-paths ["src"]
- :dependencies [[com.phronemophobic/membrane "0.9.31.8-beta"]]
+{:deps {:aliases [:cljs]}
  :builds {:app {:target :browser
                 :output-dir "resources/public/js"
                 :asset-path "/js"
