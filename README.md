@@ -25,13 +25,13 @@ Example outputs for various sizes. Example [data](https://raw.githubusercontent.
 Leiningen dependency:
 
 ```
-[com.phronemophobic/treemap-clj "0.2.5"]
+[com.phronemophobic/treemap-clj "0.2.6"]
 ```
 
 deps.edn dependency:
 
 ```
-com.phronemophobic/treemap-clj {:mvn/version "0.2.5"}
+com.phronemophobic/treemap-clj {:mvn/version "0.2.6"}
 ```
 
 
