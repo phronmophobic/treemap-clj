@@ -4,8 +4,8 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.3"]
-                 [com.phronemophobic/membrane "0.9.31.8-beta"]
-                 [com.phronemophobic/viscous "1.1"]
+                 [com.phronemophobic/membrane "0.10.1-beta"]
+                 [com.phronemophobic/viscous "1.3.2"]
                  [com.github.davidmoten/rtree "0.8.7"]]
   :resource-paths []
   ;; :java-cmd "/Library/Java/JavaVirtualMachines/jdk1.8.0_192.jdk/Contents/Home/bin/java"
