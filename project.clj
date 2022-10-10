@@ -1,4 +1,4 @@
-(defproject com.phronemophobic/treemap-clj "0.2.5"
+(defproject com.phronemophobic/treemap-clj "0.2.6"
   :description "An alternative to pprint for generically visualizing heterogeneous, hierarchical data"
   :url "https://github.com/phronmophobic/treemap-clj"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
