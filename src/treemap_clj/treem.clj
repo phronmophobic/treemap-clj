@@ -8,27 +8,34 @@
             [treemap-clj.core :refer [keyed-treemap
                                       treemap
                                       make-rect]]
-            [membrane.skia :as skia]
+            [membrane.ui :as ui]
+            [membrane.toolkit :as tk]
             [clojure.data.json :as json]
            ))
 
+(defonce toolkit
+  (delay
+    (if-let [tk (resolve 'membrane.skia/toolkit)]
+         @tk
+         @(requiring-resolve 'membrane.java2d/toolkit))))
+
 
 (defn app
-   ([obj]
-    (app obj [800 800]))
-   ([obj [w h]]
-    (let [tm (keyed-treemap obj (make-rect w h)
-                            #_(merge treemap-options-defaults
-                                   {:padding 0}))
-          tm-render (wrap-treemap-events
-                     tm
-                     [
-                      (render-depth tm 0.4)
-                      ;; (render-hierarchy-lines tm)
-                      ;; (render-keys tm)
-                      ])
-          ]
-      (skia/run (component/make-app #'treemap-explore {:tm-render (skia/->Cached tm-render)})))))
+  ([obj]
+   (app obj [800 800]))
+  ([obj [w h]]
+   (let [tm (keyed-treemap obj (make-rect w h)
+                           #_(merge treemap-options-defaults
+                                    {:padding 0}))
+         tm-render (wrap-treemap-events
+                    tm
+                    [
+                     (render-depth tm 0.4)
+                     ;; (render-hierarchy-lines tm)
+                     (render-keys tm)
+                     ])
+         ]
+     (tk/run @toolkit (component/make-app #'treemap-explore {:tm-render (ui/->Cached tm-render)})))))
 
 
 (defn -main [& args]
@@ -61,5 +68,9 @@
                               (render-depth tm 0.4)
                               (render-keys tm)])
                   ]
-              (skia/run-sync (component/make-app #'treemap-explore {:tm-render (skia/->Cached tm-render)}))))))))
+              (tk/run-sync @toolkit (component/make-app #'treemap-explore {:tm-render (ui/->Cached tm-render)}))))))))
   )
+
+(comment
+  (app (read-string (slurp "deps.edn")))
+  ,)
